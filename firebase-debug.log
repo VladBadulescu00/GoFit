@@ -1,0 +1,78 @@
+[debug] [2024-06-02T21:45:48.399Z] ----------------------------------------------------------------------
+[debug] [2024-06-02T21:45:48.401Z] Command:       C:\Users\Vlad\nodejs20\node.exe C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js login
+[debug] [2024-06-02T21:45:48.402Z] CLI Version:   13.10.2
+[debug] [2024-06-02T21:45:48.402Z] Platform:      win32
+[debug] [2024-06-02T21:45:48.402Z] Node Version:  v20.9.0
+[debug] [2024-06-02T21:45:48.402Z] Time:          Mon Jun 03 2024 00:45:48 GMT+0300 (Eastern European Summer Time)
+[debug] [2024-06-02T21:45:48.402Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you.
+ 
+[info] 
+[info] Visit this URL on this device to log in:
+[info] https://accounts.google.com/o/oauth2/auth?client_id=563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com&scope=email%20openid%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloudplatformprojects.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffirebase%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=141732239&redirect_uri=http%3A%2F%2Flocalhost%3A9005
+[info] 
+[info] Waiting for authentication...
+[debug] [2024-06-02T21:45:58.721Z] Unable to open URL: Error: spawn UNKNOWN
+    at ChildProcess.spawn (node:internal/child_process:421:11)
+    at Object.spawn (node:child_process:761:9)
+    at module.exports (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\open\index.js:114:34)
+    at open (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\auth.js:137:5)
+    at Server.<anonymous> (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\auth.js:369:13)
+    at Object.onceWrapper (node:events:628:28)
+    at Server.emit (node:events:526:35)
+    at Server.emit (node:domain:488:12)
+    at emitListeningNT (node:net:1906:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:81:21)
+[debug] [2024-06-02T23:06:37.347Z] ----------------------------------------------------------------------
+[debug] [2024-06-02T23:06:37.350Z] Command:       C:\Users\Vlad\nodejs20\node.exe C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js login
+[debug] [2024-06-02T23:06:37.350Z] CLI Version:   13.10.2
+[debug] [2024-06-02T23:06:37.351Z] Platform:      win32
+[debug] [2024-06-02T23:06:37.351Z] Node Version:  v20.9.0
+[debug] [2024-06-02T23:06:37.351Z] Time:          Mon Jun 03 2024 02:06:37 GMT+0300 (Eastern European Summer Time)
+[debug] [2024-06-02T23:06:37.351Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you.
+ 
+[info] 
+[info] Visit this URL on this device to log in:
+[info] https://accounts.google.com/o/oauth2/auth?client_id=563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com&scope=email%20openid%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloudplatformprojects.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffirebase%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=593947834&redirect_uri=http%3A%2F%2Flocalhost%3A9005
+[info] 
+[info] Waiting for authentication...
+[debug] [2024-06-02T23:06:41.531Z] Unable to open URL: Error: spawn UNKNOWN
+    at ChildProcess.spawn (node:internal/child_process:421:11)
+    at Object.spawn (node:child_process:761:9)
+    at module.exports (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\open\index.js:114:34)
+    at open (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\auth.js:137:5)
+    at Server.<anonymous> (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\auth.js:369:13)
+    at Object.onceWrapper (node:events:628:28)
+    at Server.emit (node:events:526:35)
+    at Server.emit (node:domain:488:12)
+    at emitListeningNT (node:net:1906:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:81:21)
+[debug] [2024-06-02T23:10:09.540Z] ----------------------------------------------------------------------
+[debug] [2024-06-02T23:10:09.543Z] Command:       C:\Users\Vlad\nodejs20\node.exe C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js login
+[debug] [2024-06-02T23:10:09.543Z] CLI Version:   13.10.2
+[debug] [2024-06-02T23:10:09.543Z] Platform:      win32
+[debug] [2024-06-02T23:10:09.544Z] Node Version:  v20.9.0
+[debug] [2024-06-02T23:10:09.544Z] Time:          Mon Jun 03 2024 02:10:09 GMT+0300 (Eastern European Summer Time)
+[debug] [2024-06-02T23:10:09.544Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you.
+ 
+[info] 
+[info] Visit this URL on this device to log in:
+[info] https://accounts.google.com/o/oauth2/auth?client_id=563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com&scope=email%20openid%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloudplatformprojects.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffirebase%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=874401513&redirect_uri=http%3A%2F%2Flocalhost%3A9005
+[info] 
+[info] Waiting for authentication...
+[debug] [2024-06-02T23:10:12.475Z] Unable to open URL: Error: spawn UNKNOWN
+    at ChildProcess.spawn (node:internal/child_process:421:11)
+    at Object.spawn (node:child_process:761:9)
+    at module.exports (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\open\index.js:114:34)
+    at open (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\auth.js:137:5)
+    at Server.<anonymous> (C:\Users\Vlad\AppData\Roaming\npm\node_modules\firebase-tools\lib\auth.js:369:13)
+    at Object.onceWrapper (node:events:628:28)
+    at Server.emit (node:events:526:35)
+    at Server.emit (node:domain:488:12)
+    at emitListeningNT (node:net:1906:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:81:21)

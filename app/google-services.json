@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "767903244793",
+    "project_id": "gofit-a0c5a",
+    "storage_bucket": "gofit-a0c5a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:767903244793:android:8c8eacef5bca14027cdd28",
+        "android_client_info": {
+          "package_name": "com.example.gofit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCR4BDaGtHpqTrftSbQLMcakNZn6HvosJY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
