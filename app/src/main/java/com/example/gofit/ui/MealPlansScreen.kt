@@ -18,23 +18,34 @@ import com.example.gofit.viewmodel.MealPlansViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MealPlansScreen(navController: NavController) {
-    val viewModel: MealPlansViewModel = viewModel()
+fun MealPlansScreen(navController: NavController, viewModel: MealPlansViewModel = viewModel()) {
     val mealPlans by viewModel.mealPlans.collectAsState()
+    val dailyCaloricNeeds by viewModel.dailyCaloricNeeds.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.LightGray)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+                .padding(16.dp)
         ) {
-            Text("Planuri de masă", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "Planuri de masă",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            Text(
+                text = "Necesarul caloric zilnic: $dailyCaloricNeeds calorii",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f) // This ensures the LazyColumn takes up available space
+            ) {
                 items(mealPlans) { mealPlan ->
                     Card(
                         modifier = Modifier
@@ -50,6 +61,7 @@ fun MealPlansScreen(navController: NavController) {
                             Text(text = "Proteine: ${mealPlan.protein}g", style = MaterialTheme.typography.bodyMedium)
                             Text(text = "Carbohidrați: ${mealPlan.carbs}g", style = MaterialTheme.typography.bodyMedium)
                             Text(text = "Grăsimi: ${mealPlan.fats}g", style = MaterialTheme.typography.bodyMedium)
+                            Text(text = "Sodiu: ${mealPlan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }

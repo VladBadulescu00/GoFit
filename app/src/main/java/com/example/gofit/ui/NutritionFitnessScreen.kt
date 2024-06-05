@@ -18,8 +18,8 @@ import com.example.gofit.viewmodel.MealPlansViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NutritionFitnessScreen(navController: NavController) {
-    val viewModel: MealPlansViewModel = viewModel()
+fun NutritionFitnessScreen(navController: NavController, mealPlansViewModel: MealPlansViewModel) {
+    val viewModel: MealPlansViewModel = mealPlansViewModel
 
     var age by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
@@ -56,6 +56,11 @@ fun NutritionFitnessScreen(navController: NavController) {
                 onValueChange = { age = it },
                 label = { Text("Age") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color.Transparent,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Black
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
@@ -65,6 +70,11 @@ fun NutritionFitnessScreen(navController: NavController) {
                 onValueChange = { weight = it },
                 label = { Text("Weight (kg)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color.Transparent,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Black
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
@@ -74,6 +84,11 @@ fun NutritionFitnessScreen(navController: NavController) {
                 onValueChange = { height = it },
                 label = { Text("Height (cm)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color.Transparent,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Black
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
@@ -90,6 +105,11 @@ fun NutritionFitnessScreen(navController: NavController) {
                     label = { Text("Gender") },
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGender) },
+                    colors = TextFieldDefaults.textFieldColors(
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
+                        containerColor = Color.Transparent
+                    ),
                     modifier = Modifier
                         .menuAnchor()
                         .fillMaxWidth()
@@ -122,6 +142,11 @@ fun NutritionFitnessScreen(navController: NavController) {
                     label = { Text("Activity Level") },
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedActivityLevel) },
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color.Transparent,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black
+                    ),
                     modifier = Modifier
                         .menuAnchor()
                         .fillMaxWidth()
@@ -154,6 +179,11 @@ fun NutritionFitnessScreen(navController: NavController) {
                     label = { Text("Medical Conditions") },
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMedicalConditions) },
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color.Transparent,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black
+                    ),
                     modifier = Modifier
                         .menuAnchor()
                         .fillMaxWidth()
