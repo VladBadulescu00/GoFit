@@ -1,3 +1,4 @@
+// SavedMealPlansScreen.kt
 package com.example.gofit.ui
 
 import androidx.compose.foundation.background
@@ -12,15 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.gofit.viewmodel.MealPlansViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MealPlansScreen(navController: NavController, viewModel: MealPlansViewModel) {
+fun SavedMealPlansScreen(navController: NavController, viewModel: MealPlansViewModel) {
     val mealPlans by viewModel.mealPlans.collectAsState()
-    val dailyCaloricNeeds by viewModel.dailyCaloricNeeds.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.getSavedMealPlans()
@@ -36,8 +34,7 @@ fun MealPlansScreen(navController: NavController, viewModel: MealPlansViewModel)
             verticalArrangement = Arrangement.Top
         ) {
             item {
-                Text("Planuri de masă", style = MaterialTheme.typography.titleLarge)
-                Text("Necesarul caloric zilnic: $dailyCaloricNeeds calorii", style = MaterialTheme.typography.bodyLarge)
+                Text("Saved Meal Plans", style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -48,27 +45,13 @@ fun MealPlansScreen(navController: NavController, viewModel: MealPlansViewModel)
                         .padding(vertical = 8.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Masa: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "Calorii: ${mealPlan.calories}", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Proteine: ${mealPlan.protein}g", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Carbohidrați: ${mealPlan.carbs}g", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Grăsimi: ${mealPlan.fats}g", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Sodiu: ${mealPlan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Meal: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = "Calories: ${mealPlan.calories}", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Protein: ${mealPlan.protein}g", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Carbs: ${mealPlan.carbs}g", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Fats: ${mealPlan.fats}g", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Sodium: ${mealPlan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
                     }
-                }
-            }
-
-            item {
-                Button(onClick = {
-                    navController.navigate("saved_meal_plans")
-                }) {
-                    Text("View Saved Meal Plans")
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = {
-                    navController.navigate("saved_fitness_plans")
-                }) {
-                    Text("View Saved Fitness Plans")
                 }
             }
         }
@@ -79,7 +62,7 @@ fun MealPlansScreen(navController: NavController, viewModel: MealPlansViewModel)
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
-            Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
         }
     }
 }

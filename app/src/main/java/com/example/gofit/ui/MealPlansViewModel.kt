@@ -1,9 +1,14 @@
 package com.example.gofit.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Room
+import com.example.gofit.data.AppDatabase
+import com.example.gofit.data.MealPlanEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 data class MealPlan(
@@ -15,12 +20,17 @@ data class MealPlan(
     val sodium: Int // in milligrams
 )
 
-class MealPlansViewModel : ViewModel() {
+class MealPlansViewModel(application: Application) : AndroidViewModel(application) {
     private val _mealPlans = MutableStateFlow<List<MealPlan>>(emptyList())
     val mealPlans: StateFlow<List<MealPlan>> = _mealPlans
 
     private val _dailyCaloricNeeds = MutableStateFlow<Int>(0)
     val dailyCaloricNeeds: StateFlow<Int> = _dailyCaloricNeeds
+
+    private val database = Room.databaseBuilder(application, AppDatabase::class.java, "meal_plans.db")
+        .fallbackToDestructiveMigration()
+        .build()
+    private val mealPlanDao = database.mealPlanDao()
 
     private fun calculateCaloricNeeds(age: Int, weight: Float, height: Int, gender: String, activityLevel: String): Int {
         // Basic metabolic rate (BMR) calculation using Mifflin-St Jeor Equation
@@ -57,52 +67,40 @@ class MealPlansViewModel : ViewModel() {
 
             val plans = when (activityLevel) {
                 "Sedentary" -> listOf(
-                    MealPlan("Mic dejun: Iaurt cu fructe și cereale integrale", 212, 10, 35, 8, 100),
-                    MealPlan("Prânz: Salată de pui cu legume proaspete", 297, 25, 30, 15, 200),
-                    MealPlan("Cină: Pește la grătar cu legume la abur", 340, 30, 25, 18, 150),
-                    MealPlan("Gustare: Măr și nuci", 170, 2, 30, 10, 50),
-                    MealPlan("Gustare: Batoane de cereale", 150, 5, 20, 5, 100),
-                    MealPlan("Gustare: Morcovi și hummus", 100, 2, 15, 7, 120)
+                    MealPlan("Mic dejun: Iaurt cu fructe și cereale integrale", 250, 10, 35, 8, 100),
+                    MealPlan("Prânz: Salată de pui cu legume proaspete", 350, 25, 30, 15, 200),
+                    MealPlan("Cină: Pește la grătar cu legume la abur", 400, 30, 25, 18, 150),
+                    MealPlan("Gustare: Măr și nuci", 200, 2, 30, 10, 50)
                 )
                 "Lightly active" -> listOf(
-                    MealPlan("Mic dejun: Omletă cu legume și pâine integrală", 320, 20, 35, 12, 150),
-                    MealPlan("Prânz: Sandviș cu curcan și avocado", 420, 25, 40, 20, 200),
-                    MealPlan("Cină: Tocăniță de vită cu cartofi dulci", 540, 35, 45, 18, 180),
-                    MealPlan("Gustare: Smoothie cu banane și spanac", 250, 5, 45, 5, 50),
-                    MealPlan("Gustare: Batoane proteice", 220, 20, 20, 8, 150),
-                    MealPlan("Gustare: Migdale și iaurt grecesc", 180, 10, 10, 12, 70)
+                    MealPlan("Mic dejun: Omletă cu legume și pâine integrală", 300, 20, 35, 12, 150),
+                    MealPlan("Prânz: Sandviș cu curcan și avocado", 400, 25, 40, 20, 200),
+                    MealPlan("Cină: Tocăniță de vită cu cartofi dulci", 500, 35, 45, 18, 180),
+                    MealPlan("Gustare: Smoothie cu banane și spanac", 250, 5, 45, 5, 50)
                 )
                 "Moderately active" -> listOf(
-                    MealPlan("Mic dejun: Smoothie cu banane, spanac și proteine", 380, 25, 50, 10, 100),
-                    MealPlan("Prânz: Quinoa cu legume și pui", 470, 30, 50, 15, 150),
-                    MealPlan("Cină: Paste integrale cu sos de roșii și carne de curcan", 600, 40, 60, 20, 200),
-                    MealPlan("Gustare: Iaurt grecesc cu miere și nuci", 320, 10, 20, 15, 100),
-                    MealPlan("Gustare: Batoane proteice", 220, 20, 20, 8, 150),
-                    MealPlan("Gustare: Smoothie cu căpșuni și lapte de migdale", 250, 15, 30, 5, 80)
+                    MealPlan("Mic dejun: Smoothie cu banane, spanac și proteine", 350, 25, 50, 10, 100),
+                    MealPlan("Prânz: Quinoa cu legume și pui", 450, 30, 50, 15, 150),
+                    MealPlan("Cină: Paste integrale cu sos de roșii și carne de curcan", 550, 40, 60, 20, 200),
+                    MealPlan("Gustare: Iaurt grecesc cu miere și nuci", 300, 10, 20, 15, 100)
                 )
                 "Very active" -> listOf(
-                    MealPlan("Mic dejun: Fulgi de ovăz cu fructe și miere", 420, 20, 70, 10, 100),
-                    MealPlan("Prânz: Piept de pui cu orez brun și broccoli", 520, 40, 55, 15, 150),
-                    MealPlan("Cină: Somon la cuptor cu sparanghel", 620, 45, 30, 25, 200),
-                    MealPlan("Gustare: Shake proteic cu lapte de migdale", 320, 30, 20, 10, 50),
-                    MealPlan("Gustare: Batoane proteice", 240, 20, 25, 10, 150),
-                    MealPlan("Gustare: Smoothie cu spanac și măr", 260, 10, 40, 5, 70)
+                    MealPlan("Mic dejun: Fulgi de ovăz cu fructe și miere", 400, 20, 70, 10, 100),
+                    MealPlan("Prânz: Piept de pui cu orez brun și broccoli", 500, 40, 55, 15, 150),
+                    MealPlan("Cină: Somon la cuptor cu sparanghel", 600, 45, 30, 25, 200),
+                    MealPlan("Gustare: Shake proteic cu lapte de migdale", 300, 30, 20, 10, 50)
                 )
                 "Super active" -> listOf(
-                    MealPlan("Mic dejun: Clătite proteice cu fructe de pădure", 470, 30, 60, 15, 150),
-                    MealPlan("Prânz: Burrito cu fasole neagră și avocado", 570, 25, 65, 25, 200),
-                    MealPlan("Cină: Friptură de vită cu salată de spanac și nuci", 670, 50, 40, 30, 250),
-                    MealPlan("Gustare: Batonaș proteic și un măr", 370, 20, 40, 10, 50),
-                    MealPlan("Gustare: Iaurt grecesc cu miere și nuci", 320, 10, 20, 15, 100),
-                    MealPlan("Gustare: Smoothie proteic cu unt de arahide", 350, 25, 30, 12, 80)
+                    MealPlan("Mic dejun: Clătite proteice cu fructe de pădure", 450, 30, 60, 15, 150),
+                    MealPlan("Prânz: Burrito cu fasole neagră și avocado", 550, 25, 65, 25, 200),
+                    MealPlan("Cină: Friptură de vită cu salată de spanac și nuci", 650, 50, 40, 30, 250),
+                    MealPlan("Gustare: Batonaș proteic și un măr", 350, 20, 40, 10, 50)
                 )
                 else -> listOf(
-                    MealPlan("Mic dejun: Iaurt cu fructe și cereale integrale", 212, 10, 35, 8, 100),
-                    MealPlan("Prânz: Salată de pui cu legume proaspete", 297, 25, 30, 15, 200),
-                    MealPlan("Cină: Pește la grătar cu legume la abur", 340, 30, 25, 18, 150),
-                    MealPlan("Gustare: Măr și nuci", 170, 2, 30, 10, 50),
-                    MealPlan("Gustare: Batoane de cereale", 150, 5, 20, 5, 100),
-                    MealPlan("Gustare: Morcovi și hummus", 100, 2, 15, 7, 120)
+                    MealPlan("Mic dejun: Iaurt cu fructe și cereale integrale", 250, 10, 35, 8, 100),
+                    MealPlan("Prânz: Salată de pui cu legume proaspete", 350, 25, 30, 15, 200),
+                    MealPlan("Cină: Pește la grătar cu legume la abur", 400, 30, 25, 18, 150),
+                    MealPlan("Gustare: Măr și nuci", 200, 2, 30, 10, 50)
                 )
             }
 
@@ -136,6 +134,39 @@ class MealPlansViewModel : ViewModel() {
             }
 
             _mealPlans.value = adjustedPlans
+
+            // Save meal plans to the database
+            adjustedPlans.forEach { mealPlan ->
+                viewModelScope.launch {
+                    mealPlanDao.insert(
+                        MealPlanEntity(
+                            meal = mealPlan.meal,
+                            calories = mealPlan.calories,
+                            protein = mealPlan.protein,
+                            carbs = mealPlan.carbs,
+                            fats = mealPlan.fats,
+                            sodium = mealPlan.sodium
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun getSavedMealPlans() {
+        viewModelScope.launch {
+            mealPlanDao.getAllMealPlans().collect { entities ->
+                _mealPlans.value = entities.map { entity ->
+                    MealPlan(
+                        meal = entity.meal,
+                        calories = entity.calories,
+                        protein = entity.protein,
+                        carbs = entity.carbs,
+                        fats = entity.fats,
+                        sodium = entity.sodium
+                    )
+                }
+            }
         }
     }
 }
