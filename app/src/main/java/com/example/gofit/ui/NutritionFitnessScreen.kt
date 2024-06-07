@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.gofit.viewmodel.MealPlansViewModel
 import com.example.gofit.viewmodel.FitnessPlansViewModel
@@ -24,6 +25,8 @@ fun NutritionFitnessScreen(
     fitnessPlansViewModel: FitnessPlansViewModel,
     userId: String
 ) {
+    val viewModel: MealPlansViewModel = mealPlansViewModel
+
     var age by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
@@ -228,8 +231,8 @@ fun NutritionFitnessScreen(
                         errorMessage = "Please enter valid numbers for age, weight, and height."
                     } else {
                         showError = false
-                        // Call ViewModel function to generate meal plans
-                        mealPlansViewModel.generateMealPlans(
+                        // Call ViewModel functions to generate meal and fitness plans
+                        viewModel.generateMealPlans(
                             age = ageInt,
                             weight = weightFloat,
                             height = heightInt,
@@ -238,7 +241,7 @@ fun NutritionFitnessScreen(
                             medicalConditions = medicalConditions,
                             userId = userId // Pass the userId here
                         )
-                        fitnessPlansViewModel.generateFitnessPlans(userId)
+                        fitnessPlansViewModel.generateFitnessPlans(userId, medicalConditions)
                         navController.navigate("generated_plans/$userId")
                     }
                 },

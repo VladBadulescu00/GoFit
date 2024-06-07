@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 data class FitnessPlan(
-    val id: Int, // Add this line
+    val id: Int,
     val userId: String,
     val exercise: String,
     val duration: Int,
@@ -34,18 +34,51 @@ class FitnessPlansViewModel(application: Application) : AndroidViewModel(applica
         .build()
     private val fitnessPlanDao = database.fitnessPlanDao()
 
-    fun generateFitnessPlans(userId: String) {
+    private fun adjustForMedicalConditions(
+        fitnessPlan: FitnessPlan,
+        medicalConditions: String
+    ): FitnessPlan {
+        var adjustedFitnessPlan = fitnessPlan
+        if (medicalConditions.contains("Heart Disease")) {
+            adjustedFitnessPlan = adjustedFitnessPlan.copy(
+                exercise = "Cardiovascular Exercises: Frog jumps, Burpees, Mountain climbers, Squat jumps, Jumping jacks to a step, Toe taps with jumps, Side to side jumping lunges, Prisoner squat jumps",
+                duration = 30,
+                caloriesBurned = 300
+            )
+        } else if (medicalConditions.contains("Hypertension")) {
+            adjustedFitnessPlan = adjustedFitnessPlan.copy(
+                exercise = "Aerobic Exercises: Jogging, Hiking, Bicycling, Swimming laps, Jumping rope, Aerobics, Weight lifting, Stair climbing",
+                duration = (fitnessPlan.duration * 0.5).toInt(),
+                caloriesBurned = (fitnessPlan.caloriesBurned * 0.5).toInt()
+            )
+        } else {
+            adjustedFitnessPlan = adjustedFitnessPlan.copy(
+                exercise = "Any Cardio Exercise: Running, Swimming, etc.",
+                duration = fitnessPlan.duration * 2,
+                caloriesBurned = fitnessPlan.caloriesBurned * 2
+            )
+        }
+        return adjustedFitnessPlan
+    }
+
+    fun generateFitnessPlans(userId: String, medicalConditions: String) {
         viewModelScope.launch {
             val plans = InitialData.generateFitnessPlansForUser(userId)
 
             val adjustedPlans = plans.map { entity ->
-                FitnessPlan(
+                var fitnessPlan = FitnessPlan(
                     id = entity.id,
                     userId = entity.userId,
                     exercise = entity.exercise,
                     duration = entity.duration,
                     caloriesBurned = entity.caloriesBurned
                 )
+
+                if (fitnessPlan.exercise.contains("Cardio")) {
+                    fitnessPlan = adjustForMedicalConditions(fitnessPlan, medicalConditions)
+                }
+
+                fitnessPlan
             }
 
             _generatedFitnessPlans.value = adjustedPlans
@@ -89,7 +122,3 @@ class FitnessPlansViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 }
-
-
-
-

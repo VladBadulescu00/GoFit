@@ -56,6 +56,23 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
         return (bmr * activityFactor).toInt()
     }
 
+    private fun adjustForMedicalConditions(
+        mealPlan: MealPlan,
+        medicalConditions: String
+    ): MealPlan {
+        var adjustedMealPlan = mealPlan
+        if (medicalConditions.contains("Diabetes")) {
+            adjustedMealPlan = adjustedMealPlan.copy(carbs = (mealPlan.carbs * 0.8).toInt())
+        }
+        if (medicalConditions.contains("Hypertension")) {
+            adjustedMealPlan = adjustedMealPlan.copy(sodium = (mealPlan.sodium * 0.7).toInt())
+        }
+        if (medicalConditions.contains("Heart Disease")) {
+            adjustedMealPlan = adjustedMealPlan.copy(fats = (mealPlan.fats * 0.8).toInt())
+        }
+        return adjustedMealPlan
+    }
+
     fun generateMealPlans(
         age: Int,
         weight: Float,
@@ -69,18 +86,29 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
             val caloricNeeds = calculateCaloricNeeds(age, weight, height, gender, activityLevel)
             _dailyCaloricNeeds.value = caloricNeeds
 
-            val plans = InitialData.generateMealPlansForUser(userId)
+            val totalMeals = 3
+            val totalSnacks = 2
+            val mealCalories = caloricNeeds * 0.7 / totalMeals
+            val snackCalories = caloricNeeds * 0.3 / totalSnacks
 
-            val adjustedPlans = plans.map { entity ->
-                MealPlan(
+            val initialMeals = InitialData.generateMealPlansForUser(userId)
+            val meals = initialMeals.take(totalMeals)
+            val snacks = initialMeals.drop(totalMeals).take(totalSnacks)
+
+            val adjustedPlans = (meals + snacks).map { entity ->
+                var mealPlan = MealPlan(
                     id = entity.id,
                     meal = entity.meal,
-                    calories = entity.calories,
-                    protein = entity.protein,
-                    carbs = entity.carbs,
-                    fats = entity.fats,
+                    calories = if (entity.meal.contains("Snack")) snackCalories.toInt() else mealCalories.toInt(),
+                    protein = (entity.protein * weight / 70).toInt(), // Assuming average weight 70kg for scaling
+                    carbs = (entity.carbs * weight / 70).toInt(),
+                    fats = (entity.fats * weight / 70).toInt(),
                     sodium = entity.sodium
                 )
+
+                mealPlan = adjustForMedicalConditions(mealPlan, medicalConditions)
+
+                mealPlan
             }
 
             _generatedMealPlans.value = adjustedPlans

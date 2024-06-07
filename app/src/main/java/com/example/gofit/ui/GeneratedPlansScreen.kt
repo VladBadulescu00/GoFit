@@ -91,7 +91,7 @@ fun GeneratedPlansScreen(
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
-            Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
         }
     }
 }
