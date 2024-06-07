@@ -1,4 +1,3 @@
-// SavedFitnessPlansScreen.kt
 package com.example.gofit.ui
 
 import androidx.compose.foundation.background
@@ -17,11 +16,11 @@ import androidx.navigation.NavController
 import com.example.gofit.viewmodel.FitnessPlansViewModel
 
 @Composable
-fun SavedFitnessPlansScreen(navController: NavController, viewModel: FitnessPlansViewModel) {
-    val fitnessPlans by viewModel.fitnessPlans.collectAsState()
+fun SavedFitnessPlansScreen(navController: NavController, viewModel: FitnessPlansViewModel, userId: String) {
+    val fitnessPlans by viewModel.savedFitnessPlans.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.getSavedFitnessPlans()
+        viewModel.getSavedFitnessPlans(userId)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -48,6 +47,10 @@ fun SavedFitnessPlansScreen(navController: NavController, viewModel: FitnessPlan
                         Text(text = "Exercise: ${fitnessPlan.exercise}", style = MaterialTheme.typography.bodyLarge)
                         Text(text = "Duration: ${fitnessPlan.duration} minutes", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Calories Burned: ${fitnessPlan.caloriesBurned}", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { viewModel.deleteFitnessPlan(fitnessPlan.id, userId) }) {
+                            Text("Delete")
+                        }
                     }
                 }
             }
@@ -63,3 +66,4 @@ fun SavedFitnessPlansScreen(navController: NavController, viewModel: FitnessPlan
         }
     }
 }
+

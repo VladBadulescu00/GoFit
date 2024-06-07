@@ -14,14 +14,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.gofit.viewmodel.MealPlansViewModel
+import com.example.gofit.viewmodel.FitnessPlansViewModel
 
 @Composable
-fun SavedMealPlansScreen(navController: NavController, viewModel: MealPlansViewModel, userId: String) {
-    val savedMealPlans by viewModel.savedMealPlans.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.getSavedMealPlans(userId)
-    }
+fun GeneratedPlansScreen(
+    navController: NavController,
+    mealPlansViewModel: MealPlansViewModel,
+    fitnessPlansViewModel: FitnessPlansViewModel,
+    userId: String
+) {
+    val generatedMealPlans by mealPlansViewModel.generatedMealPlans.collectAsState()
+    val generatedFitnessPlans by fitnessPlansViewModel.generatedFitnessPlans.collectAsState()
+    val dailyCaloricNeeds by mealPlansViewModel.dailyCaloricNeeds.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -33,11 +37,12 @@ fun SavedMealPlansScreen(navController: NavController, viewModel: MealPlansViewM
             verticalArrangement = Arrangement.Top
         ) {
             item {
-                Text("Saved Meal Plans", style = MaterialTheme.typography.titleLarge)
+                Text("Planuri de masă", style = MaterialTheme.typography.titleLarge)
+                Text("Necesarul caloric zilnic: $dailyCaloricNeeds calorii", style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            items(savedMealPlans) { mealPlan ->
+            items(generatedMealPlans) { mealPlan ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -50,11 +55,32 @@ fun SavedMealPlansScreen(navController: NavController, viewModel: MealPlansViewM
                         Text(text = "Carbs: ${mealPlan.carbs}g", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Fats: ${mealPlan.fats}g", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Sodium: ${mealPlan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.deleteMealPlan(mealPlan.id, userId) }) {
-                            Text("Delete")
-                        }
                     }
+                }
+            }
+
+            items(generatedFitnessPlans) { fitnessPlan ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Exercise: ${fitnessPlan.exercise}", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = "Duration: ${fitnessPlan.duration} minutes", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Calories Burned: ${fitnessPlan.caloriesBurned}", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = { navController.navigate("saved_meal_plans/$userId") }) {
+                    Text("View Saved Meal Plans")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = { navController.navigate("saved_fitness_plans/$userId") }) {
+                    Text("View Saved Fitness Plans")
                 }
             }
         }
@@ -65,10 +91,7 @@ fun SavedMealPlansScreen(navController: NavController, viewModel: MealPlansViewM
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
-            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
         }
     }
 }
-
-
-

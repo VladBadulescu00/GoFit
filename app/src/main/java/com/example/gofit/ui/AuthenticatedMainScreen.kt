@@ -5,7 +5,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShowChart
@@ -24,7 +23,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuthenticatedMainScreen(navController: NavController) {
+fun AuthenticatedMainScreen(navController: NavController, userId: String) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
 
@@ -48,10 +47,10 @@ fun AuthenticatedMainScreen(navController: NavController) {
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.FitnessCenter, contentDescription = "Generate Meal Plans") },
+                    icon = { Icon(Icons.Filled.FitnessCenter, contentDescription = "Generate Plans") },
                     label = { Text("Planuri") },
                     selected = false,
-                    onClick = { navController.navigate("nutrition_fitness") }
+                    onClick = { navController.navigate("nutrition_fitness/$userId") }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.List, contentDescription = "Browse Meal Plans") },
@@ -87,7 +86,14 @@ fun AuthenticatedMainScreen(navController: NavController) {
                         .padding(top = 50.dp)
                         .size(150.dp)
                 )
+                Text(
+                    text = "Welcome, userId = $userId",
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White
+                )
             }
         }
     )
 }
+

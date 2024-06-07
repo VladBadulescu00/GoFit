@@ -7,10 +7,16 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FitnessPlanDao {
-
     @Insert
     suspend fun insert(fitnessPlan: FitnessPlanEntity): Long
 
-    @Query("SELECT * FROM fitness_plans")
-    fun getAllFitnessPlans(): Flow<List<FitnessPlanEntity>>
+    @Insert
+    suspend fun insertAll(fitnessPlans: List<FitnessPlanEntity>)
+
+    @Query("SELECT * FROM fitness_plans WHERE userId = :userId")
+    fun getFitnessPlansForUser(userId: String): Flow<List<FitnessPlanEntity>>
+
+    @Query("DELETE FROM fitness_plans WHERE id = :id")
+    suspend fun deleteFitnessPlanById(id: Int)
+
 }

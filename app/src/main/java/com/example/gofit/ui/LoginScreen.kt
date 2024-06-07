@@ -21,12 +21,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.gofit.R
+import com.example.gofit.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(navController: NavController, userViewModel: UserViewModel = viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -84,22 +86,27 @@ fun LoginScreen(navController: NavController) {
             )
             Button(
                 onClick = {
-                    auth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                val user = auth.currentUser
-                                if (user != null && user.isEmailVerified) {
-                                    Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
-                                    navController.navigate("authenticated_main")
+                    if (email.isNotEmpty() && password.isNotEmpty()) {
+                        auth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val user = auth.currentUser
+                                    if (user != null && user.isEmailVerified) {
+                                        userViewModel.setUserId(user.uid)
+                                        Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+                                        navController.navigate("authenticated_main")
+                                    } else {
+                                        Toast.makeText(context, "Please verify your email address", Toast.LENGTH_SHORT).show()
+                                        auth.signOut()
+                                        showResendEmailButton = true
+                                    }
                                 } else {
-                                    Toast.makeText(context, "Please verify your email address", Toast.LENGTH_SHORT).show()
-                                    auth.signOut()
-                                    showResendEmailButton = true
+                                    Toast.makeText(context, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                                 }
-                            } else {
-                                Toast.makeText(context, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                             }
-                        }
+                    } else {
+                        Toast.makeText(context, "Please enter both email and password", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier
                     .padding(8.dp)

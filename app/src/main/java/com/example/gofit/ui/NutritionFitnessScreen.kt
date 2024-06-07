@@ -12,15 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.gofit.viewmodel.MealPlansViewModel
+import com.example.gofit.viewmodel.FitnessPlansViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NutritionFitnessScreen(navController: NavController, mealPlansViewModel: MealPlansViewModel) {
-    val viewModel: MealPlansViewModel = mealPlansViewModel
-
+fun NutritionFitnessScreen(
+    navController: NavController,
+    mealPlansViewModel: MealPlansViewModel,
+    fitnessPlansViewModel: FitnessPlansViewModel,
+    userId: String
+) {
     var age by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
@@ -226,20 +229,22 @@ fun NutritionFitnessScreen(navController: NavController, mealPlansViewModel: Mea
                     } else {
                         showError = false
                         // Call ViewModel function to generate meal plans
-                        viewModel.generateMealPlans(
+                        mealPlansViewModel.generateMealPlans(
                             age = ageInt,
                             weight = weightFloat,
                             height = heightInt,
                             gender = gender,
                             activityLevel = activityLevel,
-                            medicalConditions = medicalConditions
+                            medicalConditions = medicalConditions,
+                            userId = userId // Pass the userId here
                         )
-                        navController.navigate("meal_plans")
+                        fitnessPlansViewModel.generateFitnessPlans(userId)
+                        navController.navigate("generated_plans/$userId")
                     }
                 },
                 modifier = Modifier.padding(16.dp)
             ) {
-                Text("Generate Meal Plan")
+                Text("Generate Plans")
             }
         }
         IconButton(
