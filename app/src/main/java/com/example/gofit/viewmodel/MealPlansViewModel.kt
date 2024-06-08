@@ -156,4 +156,45 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
             getSavedMealPlans(userId)
         }
     }
+
+    fun saveMealPlan(mealPlan: MealPlan2, userId: String) {
+        viewModelScope.launch {
+            mealPlanDao.insert(
+                MealPlanEntity(
+                    userId = userId,
+                    meal = mealPlan.name,
+                    calories = mealPlan.meals.sumBy { calculateCalories(it) },
+                    protein = mealPlan.meals.sumBy { calculateProtein(it) },
+                    carbs = mealPlan.meals.sumBy { calculateCarbs(it) },
+                    fats = mealPlan.meals.sumBy { calculateFats(it) },
+                    sodium = mealPlan.meals.sumBy { calculateSodium(it) }
+                )
+            )
+        }
+    }
+
+    private fun calculateCalories(meal: String): Int {
+        // Add your logic to calculate calories based on meal
+        return 0
+    }
+
+    private fun calculateProtein(meal: String): Int {
+        // Add your logic to calculate protein based on meal
+        return 0
+    }
+
+    private fun calculateCarbs(meal: String): Int {
+        // Add your logic to calculate carbs based on meal
+        return 0
+    }
+
+    private fun calculateFats(meal: String): Int {
+        // Add your logic to calculate fats based on meal
+        return 0
+    }
+
+    private fun calculateSodium(meal: String): Int {
+        // Add your logic to calculate sodium based on meal
+        return 0
+    }
 }

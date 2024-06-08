@@ -48,19 +48,19 @@ fun AuthenticatedMainScreen(navController: NavController, userId: String) {
             NavigationBar {
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.FitnessCenter, contentDescription = "Generate Plans") },
-                    label = { Text("Planuri") },
+                    label = { Text("Generate Plan") },
                     selected = false,
                     onClick = { navController.navigate("nutrition_fitness/$userId") }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.List, contentDescription = "Browse Meal Plans") },
-                    label = { Text("Planurile mele") },
+                    icon = { Icon(Icons.Filled.List, contentDescription = "Create Custom Plan") },
+                    label = { Text("Create Custom Plan") },
                     selected = false,
-                    onClick = { navController.navigate("my_plans") }
+                    onClick = { navController.navigate("custom_plans/$userId") }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.ShowChart, contentDescription = "My Progress") },
-                    label = { Text("Progresul meu") },
+                    icon = { Icon(Icons.Filled.ShowChart, contentDescription = "Progress") },
+                    label = { Text("Progress") },
                     selected = false,
                     onClick = { navController.navigate("my_progress") }
                 )

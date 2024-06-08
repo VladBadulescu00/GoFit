@@ -121,4 +121,27 @@ class FitnessPlansViewModel(application: Application) : AndroidViewModel(applica
             getSavedFitnessPlans(userId)
         }
     }
+
+    fun saveFitnessPlan(fitnessPlan: FitnessPlan2, userId: String) {
+        viewModelScope.launch {
+            fitnessPlanDao.insert(
+                FitnessPlanEntity(
+                    userId = userId,
+                    exercise = fitnessPlan.name,
+                    duration = fitnessPlan.exercises.sumBy { calculateDuration(it) },
+                    caloriesBurned = fitnessPlan.exercises.sumBy { calculateCaloriesBurned(it) }
+                )
+            )
+        }
+    }
+
+    private fun calculateDuration(exercise: String): Int {
+        // Add your logic to calculate duration based on exercise
+        return 0
+    }
+
+    private fun calculateCaloriesBurned(exercise: String): Int {
+        // Add your logic to calculate calories burned based on exercise
+        return 0
+    }
 }

@@ -49,7 +49,32 @@ fun Navigation(navController: NavHostController) {
                 backStackEntry.arguments?.getString("userId") ?: ""
             )
         }
-        composable("my_plans") { MyPlansScreen(navController) }
+        composable("custom_meal_plan/{userId}",
+            arguments = listOf(navArgument("userId") { defaultValue = "" })
+        ) { backStackEntry ->
+            CustomMealPlanScreen(
+                navController,
+                mealPlansViewModel,
+                backStackEntry.arguments?.getString("userId") ?: ""
+            )
+        }
+        composable("custom_fitness_plan/{userId}",
+            arguments = listOf(navArgument("userId") { defaultValue = "" })
+        ) { backStackEntry ->
+            CustomFitnessPlanScreen(
+                navController,
+                fitnessPlansViewModel,
+                backStackEntry.arguments?.getString("userId") ?: ""
+            )
+        }
+        composable("custom_plans/{userId}",
+            arguments = listOf(navArgument("userId") { defaultValue = "" })
+        ) { backStackEntry ->
+            CustomPlansScreen(
+                navController,
+                backStackEntry.arguments?.getString("userId") ?: ""
+            )
+        }
         composable("my_progress") { MyProgressScreen(navController) }
         composable("saved_fitness_plans/{userId}",
             arguments = listOf(navArgument("userId") { defaultValue = "" })
