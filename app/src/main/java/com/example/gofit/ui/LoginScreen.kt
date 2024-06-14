@@ -93,6 +93,7 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel = vie
                                     val user = auth.currentUser
                                     if (user != null && user.isEmailVerified) {
                                         userViewModel.setUserId(user.uid)
+                                        userViewModel.createUserDocument(user.uid)
                                         Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
                                         navController.navigate("authenticated_main")
                                     } else {

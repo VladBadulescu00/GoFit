@@ -4,7 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 
-data class MealPlan2(val id: Int, val name: String, val meals: List<String>)
+data class MealPlan2(
+    val id: String,
+    val name: String,
+    val meals: List<String>
+)
 data class FitnessPlan2(val id: Int, val name: String, val exercises: List<String>)
 
 class MyPlansViewModel : ViewModel() {
@@ -22,7 +26,7 @@ class MyPlansViewModel : ViewModel() {
         }
     }
 
-    fun deleteMealPlan(planId: Int) {
+    fun deleteMealPlan(planId: String) {
         myMealPlans.removeAll { it.id == planId }
     }
 

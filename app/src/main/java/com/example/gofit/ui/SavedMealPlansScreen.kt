@@ -15,8 +15,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.gofit.viewmodel.MealPlansViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedMealPlansScreen(navController: NavController, viewModel: MealPlansViewModel, userId: String) {
+fun SavedMealPlansScreen(
+    navController: NavController,
+    viewModel: MealPlansViewModel,
+    userId: String
+) {
     val savedMealPlans by viewModel.savedMealPlans.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -24,35 +29,36 @@ fun SavedMealPlansScreen(navController: NavController, viewModel: MealPlansViewM
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.LightGray)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+                .padding(16.dp)
         ) {
-            item {
-                Text("Saved Meal Plans", style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            Text("Saved Meal Plans", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(16.dp))
 
-            items(savedMealPlans) { mealPlan ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Meal: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "Calories: ${mealPlan.calories}", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Protein: ${mealPlan.protein}g", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Carbs: ${mealPlan.carbs}g", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Fats: ${mealPlan.fats}g", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Sodium: ${mealPlan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.deleteMealPlan(mealPlan.id, userId) }) {
-                            Text("Delete")
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(savedMealPlans) { plan ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("${plan.type}: ${plan.meal}", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Calories: ${plan.calories}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Protein: ${plan.protein}g", style = MaterialTheme.typography.bodyMedium)
+                            Text("Carbs: ${plan.carbs}g", style = MaterialTheme.typography.bodyMedium)
+                            Text("Fats: ${plan.fats}g", style = MaterialTheme.typography.bodyMedium)
+                            Text("Sodium: ${plan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
+                            Button(
+                                onClick = { viewModel.deleteMealPlan(plan.id, userId) },
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                Text("Delete")
+                            }
                         }
                     }
                 }
@@ -69,6 +75,3 @@ fun SavedMealPlansScreen(navController: NavController, viewModel: MealPlansViewM
         }
     }
 }
-
-
-

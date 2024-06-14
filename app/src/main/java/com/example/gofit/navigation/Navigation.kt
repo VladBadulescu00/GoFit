@@ -9,8 +9,8 @@ import androidx.navigation.compose.composable
 import com.example.gofit.ui.*
 import com.example.gofit.viewmodel.MealPlansViewModel
 import com.example.gofit.viewmodel.FitnessPlansViewModel
-import androidx.navigation.navArgument
 import com.example.gofit.viewmodel.UserViewModel
+import androidx.navigation.navArgument
 
 @Composable
 fun Navigation(navController: NavHostController) {

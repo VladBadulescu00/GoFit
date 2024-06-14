@@ -49,7 +49,8 @@ fun GeneratedPlansScreen(
                         .padding(vertical = 8.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Meal: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = "Type: ${mealPlan.type}", style = MaterialTheme.typography.bodyLarge) // Previously 'Meal'
+                        Text(text = "Meal: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge) // Previously 'Name'
                         Text(text = "Calories: ${mealPlan.calories}", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Protein: ${mealPlan.protein}g", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Carbs: ${mealPlan.carbs}g", style = MaterialTheme.typography.bodyMedium)
