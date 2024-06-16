@@ -221,7 +221,6 @@ fun NutritionFitnessScreen(
 
             Button(
                 onClick = {
-                    // Validate inputs
                     val ageInt = age.toIntOrNull()
                     val weightFloat = weight.toFloatOrNull()
                     val heightInt = height.toIntOrNull()
@@ -239,9 +238,9 @@ fun NutritionFitnessScreen(
                             gender = gender,
                             activityLevel = activityLevel,
                             medicalConditions = medicalConditions,
-                            userId = userId // Pass the userId here
+                            userId = userId
                         )
-                        fitnessPlansViewModel.generateFitnessPlans(userId, medicalConditions)
+                        fitnessPlansViewModel.generateFitnessPlans(userId, medicalConditions, weightFloat)
                         navController.navigate("generated_plans/$userId")
                     }
                 },

@@ -1,22 +1,21 @@
 package com.example.gofit.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Room
-import com.example.gofit.data.AppDatabase
-import com.example.gofit.data.FitnessPlanEntity
-import com.example.gofit.data.InitialData
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.util.Locale
 
 data class FitnessPlan(
-    val id: Int,
-    val userId: String,
-    val exercise: String,
-    val duration: Int,
-    val caloriesBurned: Int
+    var id: String = "",  // Changed to var to allow reassignment
+    val exercise: String = "",
+    var duration: Int = 0,
+    var caloriesBurned: Int = 0
 )
 
 class FitnessPlansViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,119 +28,124 @@ class FitnessPlansViewModel(application: Application) : AndroidViewModel(applica
     private val _savedFitnessPlans = MutableStateFlow<List<FitnessPlan>>(emptyList())
     val savedFitnessPlans: StateFlow<List<FitnessPlan>> = _savedFitnessPlans
 
-    private val database = Room.databaseBuilder(application, AppDatabase::class.java, "fitness_plans.db")
-        .fallbackToDestructiveMigration()
-        .build()
-    private val fitnessPlanDao = database.fitnessPlanDao()
+    private val firestore = FirebaseFirestore.getInstance()
 
-    private fun adjustForMedicalConditions(
-        fitnessPlan: FitnessPlan,
-        medicalConditions: String
-    ): FitnessPlan {
-        var adjustedFitnessPlan = fitnessPlan
-        if (medicalConditions.contains("Heart Disease")) {
-            adjustedFitnessPlan = adjustedFitnessPlan.copy(
-                exercise = "Cardiovascular Exercises: Frog jumps, Burpees, Mountain climbers, Squat jumps, Jumping jacks to a step, Toe taps with jumps, Side to side jumping lunges, Prisoner squat jumps",
-                duration = 30,
-                caloriesBurned = 300
-            )
-        } else if (medicalConditions.contains("Hypertension")) {
-            adjustedFitnessPlan = adjustedFitnessPlan.copy(
-                exercise = "Aerobic Exercises: Jogging, Hiking, Bicycling, Swimming laps, Jumping rope, Aerobics, Weight lifting, Stair climbing",
-                duration = (fitnessPlan.duration * 0.5).toInt(),
-                caloriesBurned = (fitnessPlan.caloriesBurned * 0.5).toInt()
-            )
-        } else {
-            adjustedFitnessPlan = adjustedFitnessPlan.copy(
-                exercise = "Any Cardio Exercise: Running, Swimming, etc.",
-                duration = fitnessPlan.duration * 2,
-                caloriesBurned = fitnessPlan.caloriesBurned * 2
-            )
-        }
-        return adjustedFitnessPlan
-    }
-
-    fun generateFitnessPlans(userId: String, medicalConditions: String) {
+    fun generateFitnessPlans(userId: String, medicalConditions: String, userWeight: Float) {
         viewModelScope.launch {
-            val plans = InitialData.generateFitnessPlansForUser(userId)
+            val fitnessPlans = mutableListOf<FitnessPlan>()
+            val categories = listOf("lowerBody", "pull", "push", "cardio")
 
-            val adjustedPlans = plans.map { entity ->
-                var fitnessPlan = FitnessPlan(
-                    id = entity.id,
-                    userId = entity.userId,
-                    exercise = entity.exercise,
-                    duration = entity.duration,
-                    caloriesBurned = entity.caloriesBurned
-                )
+            for (category in categories) {
+                val documents = firestore.collection("fitnessPlans")
+                    .document(medicalConditions.lowercase(Locale.getDefault()))
+                    .collection(category)
+                    .limit(1)
+                    .get()
+                    .await()
 
-                if (fitnessPlan.exercise.contains("Cardio")) {
-                    fitnessPlan = adjustForMedicalConditions(fitnessPlan, medicalConditions)
+                if (documents.isEmpty) {
+                    Log.d("Firestore", "No fitness plans found for $category")
+                } else {
+                    for (doc in documents) {
+                        val originalFitnessPlan = doc.toObject(FitnessPlan::class.java).apply { id = doc.id }
+                        Log.d("FitnessPlansViewModel", "Original Fitness Plan: $originalFitnessPlan")
+                        val adjustedFitnessPlan = adjustFitnessPlanForWeight(originalFitnessPlan, userWeight)
+                        Log.d("FitnessPlansViewModel", "Adjusted Fitness Plan: $adjustedFitnessPlan")
+                        fitnessPlans.add(adjustedFitnessPlan)
+                    }
                 }
-
-                fitnessPlan
             }
 
-            _generatedFitnessPlans.value = adjustedPlans
+            _generatedFitnessPlans.value = fitnessPlans
 
-            // Save fitness plans to the database
-            adjustedPlans.forEach { fitnessPlan ->
-                viewModelScope.launch {
-                    fitnessPlanDao.insert(
-                        FitnessPlanEntity(
-                            userId = userId,
-                            exercise = fitnessPlan.exercise,
-                            duration = fitnessPlan.duration,
-                            caloriesBurned = fitnessPlan.caloriesBurned
-                        )
-                    )
-                }
+            saveFitnessPlansToFirestore(userId, fitnessPlans)
+        }
+    }
+
+    private fun saveFitnessPlansToFirestore(userId: String, fitnessPlans: List<FitnessPlan>) {
+        viewModelScope.launch {
+            val existingPlans = firestore.collection("userFitnessPlans")
+                .document(userId)
+                .collection("fitnessPlans")
+                .get()
+                .await()
+
+            val existingIds = existingPlans.documents.map { it.id }.toSet()
+
+            fitnessPlans.filter { it.id !in existingIds }.forEach { fitnessPlan ->
+                firestore.collection("userFitnessPlans")
+                    .document(userId)
+                    .collection("fitnessPlans")
+                    .add(fitnessPlan)
+                    .addOnSuccessListener { documentReference ->
+                        val updatedFitnessPlan = fitnessPlan.copy(id = documentReference.id)
+                        Log.d("Firestore", "Saved fitness plan to user collection: $updatedFitnessPlan")
+                    }
             }
         }
     }
+
+    private fun adjustFitnessPlanForWeight(fitnessPlan: FitnessPlan, userWeight: Float): FitnessPlan {
+        val referenceWeight = 75f // Assume 75 kg as the reference weight
+        val factor = userWeight / referenceWeight
+
+        Log.d("FitnessPlansViewModel", "Adjusting Fitness Plan for Weight: Factor = $factor")
+
+        return fitnessPlan.copy(
+            caloriesBurned = (fitnessPlan.caloriesBurned * factor).toInt()
+        )
+    }
+
+    fun fetchFitnessPlans(userId: String) {
+        viewModelScope.launch {
+            firestore.collection("userFitnessPlans")
+                .document(userId)
+                .collection("fitnessPlans")
+                .get()
+                .addOnSuccessListener { documents ->
+                    if (documents.isEmpty) {
+                        Log.d("Firestore", "No fitness plans found for user: $userId")
+                    } else {
+                        val plans = documents.map { doc ->
+                            Log.d("Firestore", "Fetched fitness plan: ${doc.id} with data: ${doc.data}")
+                            doc.toObject(FitnessPlan::class.java).apply { id = doc.id }
+                        }
+                        _savedFitnessPlans.value = plans
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error fetching fitness plans for user: $userId", exception)
+                }
+        }
+    }
+
 
     fun getSavedFitnessPlans(userId: String) {
         viewModelScope.launch {
-            fitnessPlanDao.getFitnessPlansForUser(userId).collect { entities ->
-                _savedFitnessPlans.value = entities.map { entity ->
-                    FitnessPlan(
-                        id = entity.id,
-                        userId = entity.userId,
-                        exercise = entity.exercise,
-                        duration = entity.duration,
-                        caloriesBurned = entity.caloriesBurned
-                    )
+            firestore.collection("userFitnessPlans")
+                .document(userId)
+                .collection("fitnessPlans")
+                .get()
+                .addOnSuccessListener { documents ->
+                    _savedFitnessPlans.value = documents.map { doc ->
+                        val fitnessPlan = doc.toObject(FitnessPlan::class.java)
+                        fitnessPlan.id = doc.id // Ensure the ID is set
+                        fitnessPlan
+                    }
                 }
-            }
         }
     }
 
-    fun deleteFitnessPlan(id: Int, userId: String) {
+    fun deleteFitnessPlan(id: String, userId: String) {
         viewModelScope.launch {
-            fitnessPlanDao.deleteFitnessPlanById(id)
-            getSavedFitnessPlans(userId)
+            firestore.collection("userFitnessPlans")
+                .document(userId)
+                .collection("fitnessPlans")
+                .document(id)
+                .delete()
+                .addOnSuccessListener {
+                    getSavedFitnessPlans(userId) // Refresh the list
+                }
         }
-    }
-
-    fun saveFitnessPlan(fitnessPlan: FitnessPlan2, userId: String) {
-        viewModelScope.launch {
-            fitnessPlanDao.insert(
-                FitnessPlanEntity(
-                    userId = userId,
-                    exercise = fitnessPlan.name,
-                    duration = fitnessPlan.exercises.sumBy { calculateDuration(it) },
-                    caloriesBurned = fitnessPlan.exercises.sumBy { calculateCaloriesBurned(it) }
-                )
-            )
-        }
-    }
-
-    private fun calculateDuration(exercise: String): Int {
-        // Add your logic to calculate duration based on exercise
-        return 0
-    }
-
-    private fun calculateCaloriesBurned(exercise: String): Int {
-        // Add your logic to calculate calories burned based on exercise
-        return 0
     }
 }

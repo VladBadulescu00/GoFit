@@ -1,5 +1,6 @@
 package com.example.gofit.ui
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,14 @@ fun GeneratedPlansScreen(
     val generatedFitnessPlans by fitnessPlansViewModel.generatedFitnessPlans.collectAsState()
     val dailyCaloricNeeds by mealPlansViewModel.dailyCaloricNeeds.collectAsState()
 
+    // Fetch fitness plans when the screen is composed
+    LaunchedEffect(Unit) {
+        fitnessPlansViewModel.fetchFitnessPlans(userId)
+    }
+
+    Log.d("GeneratedPlansScreen", "Generated Meal Plans: $generatedMealPlans")
+    Log.d("GeneratedPlansScreen", "Generated Fitness Plans: $generatedFitnessPlans")
+
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
@@ -43,14 +52,16 @@ fun GeneratedPlansScreen(
             }
 
             items(generatedMealPlans) { mealPlan ->
+                Log.d("GeneratedPlansScreen", "Displaying Meal Plan: $mealPlan")
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Type: ${mealPlan.type}", style = MaterialTheme.typography.bodyLarge) // Previously 'Meal'
-                        Text(text = "Meal: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge) // Previously 'Name'
+                        Text(text = "Type: ${mealPlan.type}", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = "Meal: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = "Name: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge) // Add this line to display the meal name
                         Text(text = "Calories: ${mealPlan.calories}", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Protein: ${mealPlan.protein}g", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Carbs: ${mealPlan.carbs}g", style = MaterialTheme.typography.bodyMedium)
@@ -61,6 +72,7 @@ fun GeneratedPlansScreen(
             }
 
             items(generatedFitnessPlans) { fitnessPlan ->
+                Log.d("GeneratedPlansScreen", "Displaying Fitness Plan: $fitnessPlan")
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -96,3 +108,4 @@ fun GeneratedPlansScreen(
         }
     }
 }
+

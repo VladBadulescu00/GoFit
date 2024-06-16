@@ -169,21 +169,21 @@ fun CustomFitnessPlanScreen(navController: NavController, viewModel: FitnessPlan
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = {
-                        // Save the custom fitness plan
-                        val fitnessPlan = FitnessPlan2(
-                            id = 0,
-                            name = planName,
-                            exercises = addedExercises.map { "${it.first}: ${if (it.second > 0) "${it.second} sets, ${it.third} reps" else "${it.third} minutes"}" }
-                        )
-                        viewModel.saveFitnessPlan(fitnessPlan, userId)
-                        navController.navigate("saved_fitness_plans/$userId")
-                    },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text("Save Plan")
-                }
+//                Button(
+//                    onClick = {
+//                        // Save the custom fitness plan
+//                        val fitnessPlan = FitnessPlan2(
+//                            id = 0,
+//                            name = planName,
+//                            exercises = addedExercises.map { "${it.first}: ${if (it.second > 0) "${it.second} sets, ${it.third} reps" else "${it.third} minutes"}" }
+//                        )
+//                        viewModel.saveFitnessPlan(fitnessPlan, userId)
+//                        navController.navigate("saved_fitness_plans/$userId")
+//                    },
+//                    modifier = Modifier.align(Alignment.End)
+//                ) {
+//                    Text("Save Plan")
+//                }
             }
         }
     )

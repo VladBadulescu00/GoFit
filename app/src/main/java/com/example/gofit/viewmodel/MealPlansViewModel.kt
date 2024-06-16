@@ -9,6 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.util.Locale
 
 data class MealPlan(
@@ -61,68 +62,74 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    fun fetchMealComponentsForType(mealType: String, medicalCondition: String, subCategory: String) {
-        val formattedMealType = mealType.toLowerCase(Locale.ROOT) // Converts to lowercase
-        val formattedMedicalCondition = medicalCondition.decapitalize(Locale.ROOT) // Corrects capitalization if needed
-        val formattedSubCategory = subCategory.decapitalize(Locale.ROOT) // Corrects capitalization if needed
+    private val _mainDishComponents = MutableStateFlow<List<MealComponent>>(emptyList())
+    val mainDishComponents: StateFlow<List<MealComponent>> = _mainDishComponents
 
+    private val _sideDishComponents = MutableStateFlow<List<MealComponent>>(emptyList())
+    val sideDishComponents: StateFlow<List<MealComponent>> = _sideDishComponents
+
+    private val _soupComponents = MutableStateFlow<List<MealComponent>>(emptyList())
+    val soupComponents: StateFlow<List<MealComponent>> = _soupComponents
+
+    private val _desertComponents = MutableStateFlow<List<MealComponent>>(emptyList())
+    val desertComponents: StateFlow<List<MealComponent>> = _desertComponents
+
+    private val _breakfastComponents = MutableStateFlow<List<MealComponent>>(emptyList())
+    val breakfastComponents: StateFlow<List<MealComponent>> = _breakfastComponents
+
+
+    fun fetchMealComponentsForType(mealType: String, medicalCondition: String, subCategory: String) {
         viewModelScope.launch {
-            firestore.collection(formattedMealType)
+            val formattedMedicalCondition = when (medicalCondition) {
+                "none" -> "none"
+                "diabetes" -> "diabetes"
+                "hypertension" -> "hypertension"
+                else -> "heartDisease"
+            }
+            firestore.collection(mealType.lowercase())
                 .document(formattedMedicalCondition)
-                .collection(formattedSubCategory)
+                .collection(subCategory)
                 .get()
                 .addOnSuccessListener { documents ->
-                    if (documents.isEmpty) {
-                        Log.d("Firestore", "No components found at path: $formattedMealType/$formattedMedicalCondition/$formattedSubCategory")
-                    } else {
-                        val components = documents.map { doc ->
-                            Log.d("Firestore", "Fetched component: ${doc.id} with data: ${doc.data}")
-                            doc.toObject(MealComponent::class.java)
-                        }
-                        _mealComponents.value = components
+                    val components = documents.map { doc ->
+                        doc.toObject(MealComponent::class.java)
+                    }
+                    when (subCategory) {
+                        "mainDish" -> _mainDishComponents.value = components
+                        "sideDish" -> _sideDishComponents.value = components
+                        "soup" -> _soupComponents.value = components
+                        "desert" -> _desertComponents.value = components
+                        "meals" -> _breakfastComponents.value = components
                     }
                 }
-                .addOnFailureListener { exception ->
-                    Log.e("Firestore", "Error fetching meal components at $formattedMealType/$formattedMedicalCondition/$formattedSubCategory", exception)
-                }
         }
     }
 
-
-
-
-    private fun calculateCaloricNeeds(age: Int, weight: Float, height: Int, gender: String, activityLevel: String): Int {
-        val bmr = if (gender == "Male") {
-            10 * weight + 6.25 * height - 5 * age + 5
+    private fun calculateCaloricNeeds(
+        age: Int,
+        weight: Float,
+        height: Int,
+        gender: String,
+        activityLevel: String
+    ): Int {
+        val bmr = if (gender == "male") {
+            88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
         } else {
-            10 * weight + 6.25 * height - 5 * age - 161
+            447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
         }
-        val activityFactor = when (activityLevel) {
-            "Sedentary" -> 1.2
-            "Lightly active" -> 1.375
-            "Moderately active" -> 1.55
-            "Very active" -> 1.725
-            "Super active" -> 1.9
-            else -> 1.2
-        }
-        return (bmr * activityFactor).toInt()
+
+        return (bmr * getActivityLevelMultiplier(activityLevel)).toInt()
     }
 
-    private fun adjustForMedicalConditions(
-        mealPlan: MealPlan,
-        medicalConditions: String
-    ): MealPlan {
-        var adjustedMealPlan = mealPlan
-        if (medicalConditions.contains("Diabetes")) {
-            adjustedMealPlan = adjustedMealPlan.copy(carbs = (mealPlan.carbs * 0.8).toInt())
+    private fun getActivityLevelMultiplier(activityLevel: String): Double {
+        return when (activityLevel.lowercase(Locale.getDefault())) {
+            "sedentary" -> 1.2
+            "light" -> 1.375
+            "moderate" -> 1.55
+            "active" -> 1.725
+            "very active" -> 1.9
+            else -> 1.0
         }
-        if (medicalConditions.contains("Hypertension")) {
-            adjustedMealPlan = adjustedMealPlan.copy(sodium = (mealPlan.sodium * 0.7).toInt())
-        }
-        if (medicalConditions.contains("Heart Disease")) {
-            adjustedMealPlan = adjustedMealPlan.copy(fats = (mealPlan.fats * 0.8).toInt())
-        }
-        return adjustedMealPlan
     }
 
     fun generateMealPlans(
@@ -138,51 +145,57 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
             val caloricNeeds = calculateCaloricNeeds(age, weight, height, gender, activityLevel)
             _dailyCaloricNeeds.value = caloricNeeds
 
-            val totalMeals = 3
-            val totalSnacks = 2
-            val mealCalories = caloricNeeds * 0.7 / totalMeals
-            val snackCalories = caloricNeeds * 0.3 / totalSnacks
+            Log.d("MealPlansViewModel", "Caloric Needs: $caloricNeeds")
 
-            firestore.collection("mealPlans").get().addOnSuccessListener { documents ->
-                val initialMeals = documents.map { doc ->
-                    doc.toObject(MealPlan::class.java)
-                }
-                val meals = initialMeals.take(totalMeals)
-                val snacks = initialMeals.drop(totalMeals).take(totalSnacks)
+            val mealPlans = mutableListOf<MealPlan>()
+            val categories = listOf("breakfast", "lunch", "diner")
 
-                val adjustedPlans = (meals + snacks).map { entity ->
-                    var mealPlan = MealPlan(
-                        id = entity.id,
-                        type = entity.type,
-                        meal = entity.meal,
-                        calories = if (entity.type.contains("Snack")) snackCalories.toInt() else mealCalories.toInt(),
-                        protein = (entity.protein * weight / 70).toInt(),
-                        carbs = (entity.carbs * weight / 70).toInt(),
-                        fats = (entity.fats * weight / 70).toInt(),
-                        sodium = entity.sodium
-                    )
+            for (category in categories) {
+                val documents = firestore.collection("mealPlans")
+                    .document(medicalConditions.lowercase(Locale.getDefault()))
+                    .collection(category)
+                    .limit(1)
+                    .get()
+                    .await()
 
-                    mealPlan = adjustForMedicalConditions(mealPlan, medicalConditions)
-
-                    mealPlan
-                }
-
-                _generatedMealPlans.value = adjustedPlans
-
-                // Save meal plans to user-specific Firestore collection
-                adjustedPlans.forEach { mealPlan ->
-                    viewModelScope.launch {
-                        firestore.collection("userMealPlans")
-                            .document(userId)
-                            .collection("mealPlans")
-                            .add(mealPlan)
-                            .addOnSuccessListener { documentReference ->
-                                // Create a new instance with the updated ID
-                                val updatedMealPlan = mealPlan.copy(id = documentReference.id)
-                                // You can now update the meal plan in the list if needed
-                            }
+                if (documents.isEmpty) {
+                    Log.d("Firestore", "No meal plans found for $category")
+                } else {
+                    for (doc in documents) {
+                        val originalMealPlan = doc.toObject(MealPlan::class.java).apply { id = doc.id }
+                        Log.d("MealPlansViewModel", "Original Meal Plan: $originalMealPlan")
+                        val adjustedMealPlan = adjustMealPlanForCalories(originalMealPlan, caloricNeeds, category)
+                        Log.d("MealPlansViewModel", "Adjusted Meal Plan: $adjustedMealPlan")
+                        mealPlans.add(adjustedMealPlan)
                     }
                 }
+            }
+
+            _generatedMealPlans.value = mealPlans
+
+            saveMealPlansToFirestore(userId, mealPlans)
+        }
+    }
+
+    private fun saveMealPlansToFirestore(userId: String, mealPlans: List<MealPlan>) {
+        viewModelScope.launch {
+            val existingPlans = firestore.collection("userMealPlans")
+                .document(userId)
+                .collection("mealPlans")
+                .get()
+                .await()
+
+            val existingIds = existingPlans.documents.map { it.id }.toSet()
+
+            mealPlans.filter { it.id !in existingIds }.forEach { mealPlan ->
+                firestore.collection("userMealPlans")
+                    .document(userId)
+                    .collection("mealPlans")
+                    .add(mealPlan)
+                    .addOnSuccessListener { documentReference ->
+                        val updatedMealPlan = mealPlan.copy(id = documentReference.id)
+                        Log.d("Firestore", "Saved meal plan to user collection: $updatedMealPlan")
+                    }
             }
         }
     }
@@ -199,8 +212,33 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
                         mealPlan.id = doc.id // Ensure the ID is set
                         mealPlan
                     }
+                }.addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error fetching saved meal plans", exception)
                 }
         }
+    }
+
+
+    private fun adjustMealPlanForCalories(mealPlan: MealPlan, caloricNeeds: Int, category: String): MealPlan {
+        val percentage = when (category) {
+            "breakfast" -> 0.25
+            "lunch" -> 0.40
+            "diner" -> 0.35
+            else -> 0.0
+        }
+
+        val targetCalories = caloricNeeds * percentage
+        val factor = targetCalories / mealPlan.calories
+
+        Log.d("MealPlansViewModel", "Adjusting Meal Plan for $category: Target Calories = $targetCalories, Factor = $factor")
+
+        return mealPlan.copy(
+            calories = targetCalories.toInt(),
+            protein = (mealPlan.protein * factor).toInt(),
+            carbs = (mealPlan.carbs * factor).toInt(),
+            fats = (mealPlan.fats * factor).toInt(),
+            sodium = (mealPlan.sodium * factor).toInt()
+        )
     }
 
     fun deleteMealPlan(id: String, userId: String) {
@@ -212,47 +250,63 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
                 .delete()
                 .addOnSuccessListener {
                     getSavedMealPlans(userId) // Refresh the list
+                }.addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error deleting meal plan", exception)
                 }
         }
     }
 
     fun saveCustomMealPlan(mealPlan: CustomMealPlan) {
-        val user = auth.currentUser
-        if (user != null) {
-            val userId = user.uid
+        viewModelScope.launch {
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user != null) {
+                val userId = user.uid
+                firestore.collection("userMealPlans")
+                    .document(userId)
+                    .collection("customMealPlans")
+                    .add(mealPlan)
+                    .addOnSuccessListener { documentReference ->
+                        val updatedMealPlan = mealPlan.copy(id = documentReference.id)
+                        Log.d("Firestore", "Saved custom meal plan to user collection: $updatedMealPlan")
+                    }
+            }
+        }
+    }
+
+    fun getCustomSavedMealPlans(userId: String) {
+        viewModelScope.launch {
             firestore.collection("userMealPlans")
                 .document(userId)
                 .collection("customMealPlans")
-                .add(mealPlan)
-                .addOnSuccessListener { documentReference ->
-                    val updatedMealPlan = mealPlan.copy(id = documentReference.id)
-                    // Optionally update the state here if needed
+                .get()
+                .addOnSuccessListener { documents ->
+                    _customMealPlans.value = documents.map { doc ->
+                        val mealPlan = doc.toObject(CustomMealPlan::class.java)
+                        mealPlan.id = doc.id // Ensure the ID is set
+                        mealPlan
+                    }
+                }.addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error fetching custom meal plans", exception)
                 }
         }
     }
 
-    private fun calculateCalories(meal: String): Int {
-        // Add your logic to calculate calories based on meal
-        return 0
+
+    fun deleteCustomMealPlan(id: String, userId: String) {
+        viewModelScope.launch {
+            firestore.collection("userMealPlans")
+                .document(userId)
+                .collection("customMealPlans")
+                .document(id)
+                .delete()
+                .addOnSuccessListener {
+                    getCustomSavedMealPlans(userId) // Refresh the list after deletion
+                }.addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error deleting custom meal plan", exception)
+                }
+        }
     }
 
-    private fun calculateProtein(meal: String): Int {
-        // Add your logic to calculate protein based on meal
-        return 0
-    }
 
-    private fun calculateCarbs(meal: String): Int {
-        // Add your logic to calculate carbs based on meal
-        return 0
-    }
-
-    private fun calculateFats(meal: String): Int {
-        // Add your logic to calculate fats based on meal
-        return 0
-    }
-
-    private fun calculateSodium(meal: String): Int {
-        // Add your logic to calculate sodium based on meal
-        return 0
-    }
 }
+

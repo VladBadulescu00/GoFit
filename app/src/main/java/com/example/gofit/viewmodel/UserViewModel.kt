@@ -14,13 +14,23 @@ class UserViewModel : ViewModel() {
 
     fun setUserId(userId: String) {
         _userId.value = userId
-        // Debug log to check if userId is being set
-        println("UserViewModel: setUserId called with userId = $userId")
+        createUserDocument(userId)
+        createUserFitnessDocument(userId)
     }
 
-    // Method to create user document
+    // Method to create user meal plans document
     fun createUserDocument(userId: String) {
         val userDocument = firestore.collection("userMealPlans").document(userId)
+        userDocument.get().addOnCompleteListener { task ->
+            if (task.isSuccessful && !task.result.exists()) {
+                userDocument.set(mapOf("userId" to userId))
+            }
+        }
+    }
+
+    // Method to create user fitness plans document
+    fun createUserFitnessDocument(userId: String) {
+        val userDocument = firestore.collection("userFitnessPlans").document(userId)
         userDocument.get().addOnCompleteListener { task ->
             if (task.isSuccessful && !task.result.exists()) {
                 userDocument.set(mapOf("userId" to userId))

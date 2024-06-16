@@ -3,6 +3,7 @@ package com.example.gofit.ui
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -17,46 +18,89 @@ import androidx.navigation.NavController
 import com.example.gofit.viewmodel.MealComponent
 import com.example.gofit.viewmodel.CustomMealPlan
 import com.example.gofit.viewmodel.MealPlansViewModel
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewModel, userId: String) {
     var planName by remember { mutableStateOf("") }
-    var selectedMealType by remember { mutableStateOf("Breakfast") }
+    var selectedMealType by remember { mutableStateOf("Lunch") }
     var selectedMedicalCondition by remember { mutableStateOf("none") }
-    var subCategory by remember { mutableStateOf("") }
-    var mealAmount by remember { mutableStateOf("") }
 
-    val mealTypes = listOf("Breakfast", "Lunch", "Dinner")
-    val medicalConditions = listOf("none", "diabetes", "heartDisease", "hypertension")
-    val subCategories = listOf("mainDish", "sideDish", "dessert", "soup")
+    var mainDishAmount by remember { mutableStateOf("") }
+    var sideDishAmount by remember { mutableStateOf("") }
+    var soupAmount by remember { mutableStateOf("") }
+    var desertAmount by remember { mutableStateOf("") }
+    var breakfastAmount by remember { mutableStateOf("") }
 
-    var selectedComponent by remember { mutableStateOf<MealComponent?>(null) }
+    var selectedMainDish by remember { mutableStateOf<MealComponent?>(null) }
+    var selectedSideDish by remember { mutableStateOf<MealComponent?>(null) }
+    var selectedSoup by remember { mutableStateOf<MealComponent?>(null) }
+    var selectedDesert by remember { mutableStateOf<MealComponent?>(null) }
+    var selectedBreakfast by remember { mutableStateOf<MealComponent?>(null) }
+
     var addedMeals by remember { mutableStateOf(listOf<Pair<MealComponent, Int>>()) }
+
     val totalCalories = addedMeals.sumOf { it.first.calories * it.second / 100 }
+    val totalProtein = addedMeals.sumOf { it.first.protein * it.second / 100 }
+    val totalCarbs = addedMeals.sumOf { it.first.carbs * it.second / 100 }
+    val totalFats = addedMeals.sumOf { it.first.fats * it.second / 100 }
+    val totalSodium = addedMeals.sumOf { it.first.sodium * it.second / 100 }
+
+    val mealTypes = listOf("Breakfast", "Lunch", "Diner")
+    val medicalConditions = listOf("None", "Diabetes", "Heart Disease", "Hypertension")
 
     var expandedMealType by remember { mutableStateOf(false) }
     var expandedMedicalCondition by remember { mutableStateOf(false) }
-    var expandedSubCategory by remember { mutableStateOf(false) }
-    var expandedComponent by remember { mutableStateOf(false) }
+    var expandedMainDish by remember { mutableStateOf(false) }
+    var expandedSideDish by remember { mutableStateOf(false) }
+    var expandedSoup by remember { mutableStateOf(false) }
+    var expandedDesert by remember { mutableStateOf(false) }
+    var expandedBreakfast by remember { mutableStateOf(false) }
 
-    // LaunchedEffect to fetch meal components based on selected options
-    LaunchedEffect(selectedMealType, selectedMedicalCondition, subCategory) {
-        if (selectedMealType.isNotEmpty() && selectedMedicalCondition.isNotEmpty() && subCategory.isNotEmpty()) {
-            viewModel.fetchMealComponentsForType(selectedMealType, selectedMedicalCondition, subCategory)
-            Log.d("CustomMealPlanScreen", "Querying Firestore for: $selectedMealType/$selectedMedicalCondition/$subCategory")
+    val breakfastComponents by viewModel.breakfastComponents.collectAsState()
+    val mainDishComponents by viewModel.mainDishComponents.collectAsState()
+    val sideDishComponents by viewModel.sideDishComponents.collectAsState()
+    val soupComponents by viewModel.soupComponents.collectAsState()
+    val desertComponents by viewModel.desertComponents.collectAsState()
+
+    // Fetch meal components for subcategories
+    LaunchedEffect(selectedMealType, selectedMedicalCondition) {
+        if (selectedMealType.isNotEmpty() && selectedMedicalCondition.isNotEmpty()) {
+            val trimmedCondition = selectedMedicalCondition.trim()
+            Log.d("CustomMealPlanScreen", "Selected Medical Condition: $trimmedCondition")
+
+            val formattedMedicalCondition = when (trimmedCondition.lowercase(Locale.getDefault())) {
+                "diabetes" -> "diabetes"
+                "hypertension" -> "hypertension"
+                "none" -> "none"
+                else -> "heartDisease"
+            }
+
+            Log.d("CustomMealPlanScreen", "Formatted Medical Condition: $formattedMedicalCondition")
+
+            val subCategories = when (selectedMealType) {
+                "Breakfast" -> listOf("meals")
+                "Lunch" -> listOf("mainDish", "sideDish", "soup", "desert")
+                "Diner" -> listOf("mainDish", "sideDish", "desert")
+                else -> listOf()
+            }
+
+            subCategories.forEach { subCategory ->
+                Log.d("CustomMealPlanScreen", "Fetching components for $selectedMealType/$formattedMedicalCondition/$subCategory")
+                viewModel.fetchMealComponentsForType(selectedMealType.lowercase(), formattedMedicalCondition, subCategory)
+                Log.d("CustomMealPlanScreen", "Querying Firestore for: ${selectedMealType.lowercase()}/$formattedMedicalCondition/$subCategory")
+            }
         }
     }
 
-    val mealComponents by viewModel.mealComponents.collectAsState()
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.LightGray)
-                .padding(16.dp)
-        ) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.LightGray)
+            .padding(16.dp)
+    ) {
+        item {
             Text("Create Custom Meal Plan", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -94,7 +138,6 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
                             onClick = {
                                 selectedMealType = mealType
                                 expandedMealType = false
-                                subCategory = "" // Reset subcategory when meal type changes
                             }
                         )
                     }
@@ -108,7 +151,7 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
                 onExpandedChange = { expandedMedicalCondition = !expandedMedicalCondition }
             ) {
                 TextField(
-                    value = selectedMedicalCondition,
+                    value = selectedMedicalCondition.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
                     onValueChange = { },
                     label = { Text("Medical Condition") },
                     readOnly = true,
@@ -124,120 +167,270 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
                 ) {
                     medicalConditions.forEach { condition ->
                         DropdownMenuItem(
-                            text = { Text(condition) },
+                            text = { Text(condition.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }) },
                             onClick = {
-                                selectedMedicalCondition = condition
+                                selectedMedicalCondition = condition.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                                 expandedMedicalCondition = false
-                                subCategory = "" // Reset subcategory when medical condition changes
                             }
                         )
                     }
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
+        }
 
-            // Subcategory Dropdown
-            if (selectedMealType != "Breakfast") {
+        if (selectedMealType == "Breakfast") {
+            item {
+                // Breakfast Component
                 ExposedDropdownMenuBox(
-                    expanded = expandedSubCategory,
-                    onExpandedChange = { expandedSubCategory = !expandedSubCategory }
+                    expanded = expandedBreakfast,
+                    onExpandedChange = { expandedBreakfast = !expandedBreakfast }
                 ) {
                     TextField(
-                        value = subCategory,
+                        value = selectedBreakfast?.name ?: "Select Breakfast",
                         onValueChange = { },
-                        label = { Text("Select SubCategory") },
                         readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubCategory) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBreakfast) },
                         modifier = Modifier
                             .menuAnchor()
                             .fillMaxWidth()
                             .padding(8.dp)
                     )
                     ExposedDropdownMenu(
-                        expanded = expandedSubCategory,
-                        onDismissRequest = { expandedSubCategory = false }
+                        expanded = expandedBreakfast,
+                        onDismissRequest = { expandedBreakfast = false }
                     ) {
-                        val categories = if (selectedMealType == "Lunch") {
-                            listOf("mainDish", "sideDish", "soup", "dessert")
-                        } else {
-                            listOf("mainDish", "sideDish", "dessert")
-                        }
-                        categories.forEach { category ->
-                            DropdownMenuItem(
-                                text = { Text(category) },
-                                onClick = {
-                                    subCategory = category
-                                    expandedSubCategory = false
-                                }
-                            )
-                        }
-                    }
-                }
-            } else {
-                subCategory = "mainDish" // Default for Breakfast
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Meal Component Dropdown
-            if (subCategory.isNotEmpty()) {
-                ExposedDropdownMenuBox(
-                    expanded = expandedComponent,
-                    onExpandedChange = { expandedComponent = !expandedComponent }
-                ) {
-                    TextField(
-                        value = selectedComponent?.name ?: "",
-                        onValueChange = { },
-                        label = { Text("Select Component") },
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedComponent) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedComponent,
-                        onDismissRequest = { expandedComponent = false }
-                    ) {
-                        mealComponents.forEach { component ->
+                        breakfastComponents.forEach { component ->
                             DropdownMenuItem(
                                 text = { Text(component.name) },
                                 onClick = {
-                                    selectedComponent = component
-                                    expandedComponent = false
+                                    selectedBreakfast = component
+                                    expandedBreakfast = false
                                 }
                             )
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TextField(
+                    value = breakfastAmount,
+                    onValueChange = { breakfastAmount = it },
+                    label = { Text("Amount (grams)") },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        } else {
+            item {
+                // Main Dish Component
+                ExposedDropdownMenuBox(
+                    expanded = expandedMainDish,
+                    onExpandedChange = { expandedMainDish = !expandedMainDish }
+                ) {
+                    TextField(
+                        value = selectedMainDish?.name ?: "Select Main Dish",
+                        onValueChange = { },
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMainDish) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedMainDish,
+                        onDismissRequest = { expandedMainDish = false }
+                    ) {
+                        mainDishComponents.forEach { component ->
+                            DropdownMenuItem(
+                                text = { Text(component.name) },
+                                onClick = {
+                                    selectedMainDish = component
+                                    expandedMainDish = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TextField(
+                    value = mainDishAmount,
+                    onValueChange = { mainDishAmount = it },
+                    label = { Text("Main Dish Amount (grams)") },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TextField(
-                value = mealAmount,
-                onValueChange = { mealAmount = it },
-                label = { Text("Amount (grams)") },
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    val amount = mealAmount.toIntOrNull()
-                    if (selectedComponent != null && amount != null && amount > 0) {
-                        addedMeals = addedMeals + Pair(selectedComponent!!, amount)
-                        mealAmount = ""
-                        selectedComponent = null
-                    } else {
-                        Log.d("AddMeal", "Invalid input for adding meal")
+            item {
+                // Side Dish Component
+                ExposedDropdownMenuBox(
+                    expanded = expandedSideDish,
+                    onExpandedChange = { expandedSideDish = !expandedSideDish }
+                ) {
+                    TextField(
+                        value = selectedSideDish?.name ?: "Select Side Dish",
+                        onValueChange = { },
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSideDish) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedSideDish,
+                        onDismissRequest = { expandedSideDish = false }
+                    ) {
+                        sideDishComponents.forEach { component ->
+                            DropdownMenuItem(
+                                text = { Text(component.name) },
+                                onClick = {
+                                    selectedSideDish = component
+                                    expandedSideDish = false
+                                }
+                            )
+                        }
                     }
-                },
-                modifier = Modifier.align(Alignment.End)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TextField(
+                    value = sideDishAmount,
+                    onValueChange = { sideDishAmount = it },
+                    label = { Text("Side Dish Amount (grams)") },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            if (selectedMealType == "Lunch") {
+                item {
+                    // Soup Component
+                    ExposedDropdownMenuBox(
+                        expanded = expandedSoup,
+                        onExpandedChange = { expandedSoup = !expandedSoup }
+                    ) {
+                        TextField(
+                            value = selectedSoup?.name ?: "Select Soup",
+                            onValueChange = { },
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSoup) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedSoup,
+                            onDismissRequest = { expandedSoup = false }
+                        ) {
+                            soupComponents.forEach { component ->
+                                DropdownMenuItem(
+                                    text = { Text(component.name) },
+                                    onClick = {
+                                        selectedSoup = component
+                                        expandedSoup = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextField(
+                        value = soupAmount,
+                        onValueChange = { soupAmount = it },
+                        label = { Text("Soup Amount (grams)") },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
+            item {
+                // Dessert Component
+                ExposedDropdownMenuBox(
+                    expanded = expandedDesert,
+                    onExpandedChange = { expandedDesert = !expandedDesert }
+                ) {
+                    TextField(
+                        value = selectedDesert?.name ?: "Select Dessert",
+                        onValueChange = { },
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDesert) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedDesert,
+                        onDismissRequest = { expandedDesert = false }
+                    ) {
+                        desertComponents.forEach { component ->
+                            DropdownMenuItem(
+                                text = { Text(component.name) },
+                                onClick = {
+                                    selectedDesert = component
+                                    expandedDesert = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TextField(
+                    value = desertAmount,
+                    onValueChange = { desertAmount = it },
+                    label = { Text("Dessert Amount (grams)") },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                contentAlignment = Alignment.CenterEnd
             ) {
-                Text("Add Meal")
+                Button(
+                    onClick = {
+                        val components = listOf(
+                            selectedMainDish to mainDishAmount,
+                            selectedSideDish to sideDishAmount,
+                            selectedSoup to soupAmount,
+                            selectedDesert to desertAmount,
+                            selectedBreakfast to breakfastAmount
+                        )
+
+                        components.forEach { (component, amount) ->
+                            val grams = amount.toIntOrNull()
+                            if (component != null && grams != null && grams > 0) {
+                                addedMeals = addedMeals + Pair(component, grams)
+                            }
+                        }
+
+                        mainDishAmount = ""
+                        sideDishAmount = ""
+                        soupAmount = ""
+                        desertAmount = ""
+                        breakfastAmount = ""
+                    },
+                ) {
+                    Text("Add Meal")
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -250,37 +443,50 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
             Spacer(modifier = Modifier.height(16.dp))
 
             Text("Total Calories: $totalCalories", style = MaterialTheme.typography.titleMedium)
+            Text("Total Protein: $totalProtein g", style = MaterialTheme.typography.titleMedium)
+            Text("Total Carbs: $totalCarbs g", style = MaterialTheme.typography.titleMedium)
+            Text("Total Fats: $totalFats g", style = MaterialTheme.typography.titleMedium)
+            Text("Total Sodium: $totalSodium mg", style = MaterialTheme.typography.titleMedium)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    if (planName.isNotEmpty() && addedMeals.isNotEmpty()) {
-                        val mealPlan = CustomMealPlan(
-                            id = "",
-                            userId = userId,
-                            name = planName,
-                            meals = addedMeals.map { it.first }
-                        )
-                        viewModel.saveCustomMealPlan(mealPlan)
-                        navController.navigate("saved_meal_plans/$userId")
-                    } else {
-                        Log.d("Save Plan", "Invalid input for saving plan")
-                    }
-                },
-                modifier = Modifier.align(Alignment.End)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                contentAlignment = Alignment.CenterEnd
             ) {
-                Text("Save Plan")
+                Button(
+                    onClick = {
+                        if (planName.isNotEmpty() && addedMeals.isNotEmpty()) {
+                            val mealPlan = CustomMealPlan(
+                                id = "",
+                                userId = userId,
+                                name = planName,
+                                meals = addedMeals.map { it.first }
+                            )
+                            viewModel.saveCustomMealPlan(mealPlan)
+                            navController.navigate("saved_meal_plans/$userId")
+                        } else {
+                            Log.d("Save Plan", "Invalid input for saving plan")
+                        }
+                    },
+                ) {
+                    Text("Save Plan")
+                }
             }
         }
 
-        IconButton(
-            onClick = { navController.popBackStack() },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    IconButton(
+        onClick = { navController.popBackStack() },
+        modifier = Modifier
+            .padding(16.dp)
+    ) {
+        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
     }
 }
