@@ -77,7 +77,6 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
     private val _breakfastComponents = MutableStateFlow<List<MealComponent>>(emptyList())
     val breakfastComponents: StateFlow<List<MealComponent>> = _breakfastComponents
 
-
     fun fetchMealComponentsForType(mealType: String, medicalCondition: String, subCategory: String) {
         viewModelScope.launch {
             val formattedMedicalCondition = when (medicalCondition) {
@@ -149,10 +148,16 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
 
             val mealPlans = mutableListOf<MealPlan>()
             val categories = listOf("breakfast", "lunch", "diner")
+            val formattedMedicalCondition = when (medicalConditions.lowercase(Locale.getDefault()).trim()) {
+                "diabetes" -> "diabetes"
+                "hypertension" -> "hypertension"
+                "none" -> "none"
+                else -> "heartDisease"
+            }
 
             for (category in categories) {
                 val documents = firestore.collection("mealPlans")
-                    .document(medicalConditions.lowercase(Locale.getDefault()))
+                    .document(formattedMedicalCondition)
                     .collection(category)
                     .limit(1)
                     .get()
@@ -218,6 +223,23 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun getCustomSavedMealPlans(userId: String) {
+        viewModelScope.launch {
+            firestore.collection("userMealPlans")
+                .document(userId)
+                .collection("customMealPlans")
+                .get()
+                .addOnSuccessListener { documents ->
+                    _customMealPlans.value = documents.map { doc ->
+                        val customMealPlan = doc.toObject(CustomMealPlan::class.java)
+                        customMealPlan.id = doc.id // Ensure the ID is set
+                        customMealPlan
+                    }
+                }.addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error fetching custom meal plans", exception)
+                }
+        }
+    }
 
     private fun adjustMealPlanForCalories(mealPlan: MealPlan, caloricNeeds: Int, category: String): MealPlan {
         val percentage = when (category) {
@@ -256,6 +278,21 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun deleteCustomMealPlan(id: String, userId: String) {
+        viewModelScope.launch {
+            firestore.collection("userMealPlans")
+                .document(userId)
+                .collection("customMealPlans")
+                .document(id)
+                .delete()
+                .addOnSuccessListener {
+                    getCustomSavedMealPlans(userId) // Refresh the list
+                }.addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error deleting custom meal plan", exception)
+                }
+        }
+    }
+
     fun saveCustomMealPlan(mealPlan: CustomMealPlan) {
         viewModelScope.launch {
             val user = FirebaseAuth.getInstance().currentUser
@@ -272,41 +309,4 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
             }
         }
     }
-
-    fun getCustomSavedMealPlans(userId: String) {
-        viewModelScope.launch {
-            firestore.collection("userMealPlans")
-                .document(userId)
-                .collection("customMealPlans")
-                .get()
-                .addOnSuccessListener { documents ->
-                    _customMealPlans.value = documents.map { doc ->
-                        val mealPlan = doc.toObject(CustomMealPlan::class.java)
-                        mealPlan.id = doc.id // Ensure the ID is set
-                        mealPlan
-                    }
-                }.addOnFailureListener { exception ->
-                    Log.e("Firestore", "Error fetching custom meal plans", exception)
-                }
-        }
-    }
-
-
-    fun deleteCustomMealPlan(id: String, userId: String) {
-        viewModelScope.launch {
-            firestore.collection("userMealPlans")
-                .document(userId)
-                .collection("customMealPlans")
-                .document(id)
-                .delete()
-                .addOnSuccessListener {
-                    getCustomSavedMealPlans(userId) // Refresh the list after deletion
-                }.addOnFailureListener { exception ->
-                    Log.e("Firestore", "Error deleting custom meal plan", exception)
-                }
-        }
-    }
-
-
 }
-

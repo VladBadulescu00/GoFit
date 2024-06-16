@@ -14,8 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.gofit.viewmodel.CustomMealPlan
+import com.example.gofit.viewmodel.MealPlan
 import com.example.gofit.viewmodel.MealPlansViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,60 +45,15 @@ fun SavedMealPlansScreen(
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(savedMealPlans) { plan ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("${plan.type}: ${plan.meal}", style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Calories: ${plan.calories}", style = MaterialTheme.typography.bodyMedium)
-                            Text("Protein: ${plan.protein}g", style = MaterialTheme.typography.bodyMedium)
-                            Text("Carbs: ${plan.carbs}g", style = MaterialTheme.typography.bodyMedium)
-                            Text("Fats: ${plan.fats}g", style = MaterialTheme.typography.bodyMedium)
-                            Text("Sodium: ${plan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
-                            Button(
-                                onClick = {
-                                    viewModel.deleteMealPlan(plan.id, userId)
-                                    viewModel.getSavedMealPlans(userId) // Refresh the list after deletion
-                                },
-                                modifier = Modifier.padding(top = 8.dp)
-                            ) {
-                                Text("Delete")
-                            }
-                        }
-                    }
+                    MealPlanCard(plan = plan, onDelete = {
+                        viewModel.deleteMealPlan(plan.id, userId)
+                    })
                 }
 
                 items(customMealPlans) { customPlan ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Custom Plan: ${customPlan.name}", style = MaterialTheme.typography.titleMedium)
-                            customPlan.meals.forEach { meal ->
-                                Text("Meal: ${meal.name}", style = MaterialTheme.typography.bodyMedium)
-                                Text("Calories: ${meal.calories}", style = MaterialTheme.typography.bodySmall)
-                                Text("Protein: ${meal.protein}g", style = MaterialTheme.typography.bodySmall)
-                                Text("Carbs: ${meal.carbs}g", style = MaterialTheme.typography.bodySmall)
-                                Text("Fats: ${meal.fats}g", style = MaterialTheme.typography.bodySmall)
-                                Text("Sodium: ${meal.sodium}mg", style = MaterialTheme.typography.bodySmall)
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-                            Button(
-                                onClick = {
-                                    viewModel.deleteCustomMealPlan(customPlan.id, userId)
-                                    viewModel.getCustomSavedMealPlans(userId) // Refresh the list after deletion
-                                },
-                                modifier = Modifier.padding(top = 8.dp)
-                            ) {
-                                Text("Delete")
-                            }
-                        }
-                    }
+                    CustomMealPlanCard(customPlan = customPlan, onDelete = {
+                        viewModel.deleteCustomMealPlan(customPlan.id, userId)
+                    })
                 }
             }
         }
@@ -113,3 +69,55 @@ fun SavedMealPlansScreen(
     }
 }
 
+@Composable
+fun MealPlanCard(plan: MealPlan, onDelete: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("${plan.type}: ${plan.meal}", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Calories: ${plan.calories}", style = MaterialTheme.typography.bodyMedium)
+            Text("Protein: ${plan.protein}g", style = MaterialTheme.typography.bodyMedium)
+            Text("Carbs: ${plan.carbs}g", style = MaterialTheme.typography.bodyMedium)
+            Text("Fats: ${plan.fats}g", style = MaterialTheme.typography.bodyMedium)
+            Text("Sodium: ${plan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
+            Button(
+                onClick = onDelete,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Delete")
+            }
+        }
+    }
+}
+
+@Composable
+fun CustomMealPlanCard(customPlan: CustomMealPlan, onDelete: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Custom Plan: ${customPlan.name}", style = MaterialTheme.typography.titleMedium)
+            customPlan.meals.forEach { meal ->
+                Text("Meal: ${meal.name}", style = MaterialTheme.typography.bodyMedium)
+                Text("Calories: ${meal.calories}", style = MaterialTheme.typography.bodySmall)
+                Text("Protein: ${meal.protein}g", style = MaterialTheme.typography.bodySmall)
+                Text("Carbs: ${meal.carbs}g", style = MaterialTheme.typography.bodySmall)
+                Text("Fats: ${meal.fats}g", style = MaterialTheme.typography.bodySmall)
+                Text("Sodium: ${meal.sodium}mg", style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            Button(
+                onClick = onDelete,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Delete")
+            }
+        }
+    }
+}

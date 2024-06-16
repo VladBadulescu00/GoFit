@@ -14,13 +14,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.gofit.viewmodel.FitnessPlansViewModel
+import com.example.gofit.viewmodel.FitnessPlan
+import com.example.gofit.viewmodel.CustomFitnessPlan
 
 @Composable
 fun SavedFitnessPlansScreen(navController: NavController, viewModel: FitnessPlansViewModel, userId: String) {
     val fitnessPlans by viewModel.savedFitnessPlans.collectAsState()
+    val customFitnessPlans by viewModel.customFitnessPlans.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.getSavedFitnessPlans(userId)
+        viewModel.getCustomSavedFitnessPlans(userId) // Fetch custom fitness plans
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -38,21 +42,11 @@ fun SavedFitnessPlansScreen(navController: NavController, viewModel: FitnessPlan
             }
 
             items(fitnessPlans) { fitnessPlan ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Exercise: ${fitnessPlan.exercise}", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "Duration: ${fitnessPlan.duration} minutes", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Calories Burned: ${fitnessPlan.caloriesBurned}", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.deleteFitnessPlan(fitnessPlan.id, userId) }) {
-                            Text("Delete")
-                        }
-                    }
-                }
+                FitnessPlanCard(fitnessPlan, onDelete = { viewModel.deleteFitnessPlan(fitnessPlan.id, userId) })
+            }
+
+            items(customFitnessPlans) { customPlan ->
+                CustomFitnessPlanCard(customPlan, onDelete = { viewModel.deleteCustomFitnessPlan(customPlan.id, userId) })
             }
         }
 
@@ -67,3 +61,42 @@ fun SavedFitnessPlansScreen(navController: NavController, viewModel: FitnessPlan
     }
 }
 
+@Composable
+fun FitnessPlanCard(fitnessPlan: FitnessPlan, onDelete: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "Exercise: ${fitnessPlan.exercise}", style = MaterialTheme.typography.bodyLarge)
+            Text(text = "Duration: ${fitnessPlan.duration} minutes", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Calories Burned: ${fitnessPlan.caloriesBurned}", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onDelete) {
+                Text("Delete")
+            }
+        }
+    }
+}
+
+@Composable
+fun CustomFitnessPlanCard(customPlan: CustomFitnessPlan, onDelete: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Custom Plan: ${customPlan.name}", style = MaterialTheme.typography.titleMedium)
+            customPlan.exercises.forEach { exercise ->
+                Text("${exercise.name}: ${exercise.reps} reps, ${exercise.sets} sets", style = MaterialTheme.typography.bodyMedium)
+                Text("Calories Burned: ${exercise.caloriesBurned}", style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            Button(onClick = onDelete, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Delete")
+            }
+        }
+    }
+}

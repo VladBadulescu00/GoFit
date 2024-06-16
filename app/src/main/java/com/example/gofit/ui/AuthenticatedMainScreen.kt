@@ -7,16 +7,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.gofit.R
 import com.google.firebase.auth.FirebaseAuth
@@ -26,6 +32,8 @@ import com.google.firebase.auth.FirebaseAuth
 fun AuthenticatedMainScreen(navController: NavController, userId: String) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
+    val userEmail = auth.currentUser?.email
+    val username = userEmail?.substringBefore('@') ?: "User"
 
     Scaffold(
         topBar = {
@@ -59,10 +67,10 @@ fun AuthenticatedMainScreen(navController: NavController, userId: String) {
                     onClick = { navController.navigate("custom_plans/$userId") }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.ShowChart, contentDescription = "Progress") },
-                    label = { Text("Progress") },
+                    icon = { Icon(Icons.Filled.Save, contentDescription = "Saved Plans") },
+                    label = { Text("Saved Plans") },
                     selected = false,
-                    onClick = { navController.navigate("my_progress") }
+                    onClick = { navController.navigate("saved_plans_selection/$userId") }
                 )
             }
         },
@@ -78,20 +86,42 @@ fun AuthenticatedMainScreen(navController: NavController, userId: String) {
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-                Image(
-                    painter = painterResource(id = R.drawable.logogofit),
-                    contentDescription = "Logo",
+                Box(
                     modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 50.dp)
-                        .size(150.dp)
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f)),
+                                startY = 0f,
+                                endY = Float.POSITIVE_INFINITY
+                            )
+                        )
                 )
-                Text(
-                    text = "Welcome, userId = $userId",
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.White
-                )
+                Column(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logogofit),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .padding(top = 50.dp)
+                            .size(150.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Welcome, $username",
+                        style = TextStyle(
+                            fontSize = 24.sp,
+                            color = Color.White,
+                            shadow = Shadow(
+                                color = Color.Black,
+                                offset = Offset(2f, 2f),
+                                blurRadius = 4f
+                            )
+                        )
+                    )
+                }
             }
         }
     )

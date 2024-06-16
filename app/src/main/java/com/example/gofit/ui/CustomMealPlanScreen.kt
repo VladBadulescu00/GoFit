@@ -24,8 +24,8 @@ import java.util.*
 @Composable
 fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewModel, userId: String) {
     var planName by remember { mutableStateOf("") }
-    var selectedMealType by remember { mutableStateOf("Lunch") }
-    var selectedMedicalCondition by remember { mutableStateOf("none") }
+    var selectedMealType by remember { mutableStateOf("") }
+    var selectedMedicalCondition by remember { mutableStateOf("") }
 
     var mainDishAmount by remember { mutableStateOf("") }
     var sideDishAmount by remember { mutableStateOf("") }
@@ -118,7 +118,7 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
                 onExpandedChange = { expandedMealType = !expandedMealType }
             ) {
                 TextField(
-                    value = selectedMealType,
+                    value = if (selectedMealType.isEmpty()) "Select Meal Type" else selectedMealType,
                     onValueChange = { },
                     label = { Text("Meal Type") },
                     readOnly = true,
@@ -151,7 +151,7 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
                 onExpandedChange = { expandedMedicalCondition = !expandedMedicalCondition }
             ) {
                 TextField(
-                    value = selectedMedicalCondition.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                    value = if (selectedMedicalCondition.isEmpty()) "Select Medical Condition" else selectedMedicalCondition.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
                     onValueChange = { },
                     label = { Text("Medical Condition") },
                     readOnly = true,
@@ -179,163 +179,34 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        if (selectedMealType == "Breakfast") {
-            item {
-                // Breakfast Component
-                ExposedDropdownMenuBox(
-                    expanded = expandedBreakfast,
-                    onExpandedChange = { expandedBreakfast = !expandedBreakfast }
-                ) {
-                    TextField(
-                        value = selectedBreakfast?.name ?: "Select Breakfast",
-                        onValueChange = { },
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBreakfast) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedBreakfast,
-                        onDismissRequest = { expandedBreakfast = false }
-                    ) {
-                        breakfastComponents.forEach { component ->
-                            DropdownMenuItem(
-                                text = { Text(component.name) },
-                                onClick = {
-                                    selectedBreakfast = component
-                                    expandedBreakfast = false
-                                }
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextField(
-                    value = breakfastAmount,
-                    onValueChange = { breakfastAmount = it },
-                    label = { Text("Amount (grams)") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        } else {
-            item {
-                // Main Dish Component
-                ExposedDropdownMenuBox(
-                    expanded = expandedMainDish,
-                    onExpandedChange = { expandedMainDish = !expandedMainDish }
-                ) {
-                    TextField(
-                        value = selectedMainDish?.name ?: "Select Main Dish",
-                        onValueChange = { },
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMainDish) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedMainDish,
-                        onDismissRequest = { expandedMainDish = false }
-                    ) {
-                        mainDishComponents.forEach { component ->
-                            DropdownMenuItem(
-                                text = { Text(component.name) },
-                                onClick = {
-                                    selectedMainDish = component
-                                    expandedMainDish = false
-                                }
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextField(
-                    value = mainDishAmount,
-                    onValueChange = { mainDishAmount = it },
-                    label = { Text("Main Dish Amount (grams)") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            item {
-                // Side Dish Component
-                ExposedDropdownMenuBox(
-                    expanded = expandedSideDish,
-                    onExpandedChange = { expandedSideDish = !expandedSideDish }
-                ) {
-                    TextField(
-                        value = selectedSideDish?.name ?: "Select Side Dish",
-                        onValueChange = { },
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSideDish) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedSideDish,
-                        onDismissRequest = { expandedSideDish = false }
-                    ) {
-                        sideDishComponents.forEach { component ->
-                            DropdownMenuItem(
-                                text = { Text(component.name) },
-                                onClick = {
-                                    selectedSideDish = component
-                                    expandedSideDish = false
-                                }
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextField(
-                    value = sideDishAmount,
-                    onValueChange = { sideDishAmount = it },
-                    label = { Text("Side Dish Amount (grams)") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            if (selectedMealType == "Lunch") {
+        if (selectedMealType.isNotEmpty()) {
+            if (selectedMealType == "Breakfast") {
                 item {
-                    // Soup Component
+                    // Breakfast Component
                     ExposedDropdownMenuBox(
-                        expanded = expandedSoup,
-                        onExpandedChange = { expandedSoup = !expandedSoup }
+                        expanded = expandedBreakfast,
+                        onExpandedChange = { expandedBreakfast = !expandedBreakfast }
                     ) {
                         TextField(
-                            value = selectedSoup?.name ?: "Select Soup",
+                            value = selectedBreakfast?.name ?: "Select Breakfast",
                             onValueChange = { },
                             readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSoup) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBreakfast) },
                             modifier = Modifier
                                 .menuAnchor()
                                 .fillMaxWidth()
                                 .padding(8.dp)
                         )
                         ExposedDropdownMenu(
-                            expanded = expandedSoup,
-                            onDismissRequest = { expandedSoup = false }
+                            expanded = expandedBreakfast,
+                            onDismissRequest = { expandedBreakfast = false }
                         ) {
-                            soupComponents.forEach { component ->
+                            breakfastComponents.forEach { component ->
                                 DropdownMenuItem(
                                     text = { Text(component.name) },
                                     onClick = {
-                                        selectedSoup = component
-                                        expandedSoup = false
+                                        selectedBreakfast = component
+                                        expandedBreakfast = false
                                     }
                                 )
                             }
@@ -344,9 +215,183 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
                     Spacer(modifier = Modifier.height(8.dp))
 
                     TextField(
-                        value = soupAmount,
-                        onValueChange = { soupAmount = it },
-                        label = { Text("Soup Amount (grams)") },
+                        value = breakfastAmount,
+                        onValueChange = { breakfastAmount = it },
+                        label = { Text("Amount (grams)") },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            } else {
+                item {
+                    // Main Dish Component
+                    ExposedDropdownMenuBox(
+                        expanded = expandedMainDish,
+                        onExpandedChange = { expandedMainDish = !expandedMainDish }
+                    ) {
+                        TextField(
+                            value = selectedMainDish?.name ?: "Select Main Dish",
+                            onValueChange = { },
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMainDish) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedMainDish,
+                            onDismissRequest = { expandedMainDish = false }
+                        ) {
+                            mainDishComponents.forEach { component ->
+                                DropdownMenuItem(
+                                    text = { Text(component.name) },
+                                    onClick = {
+                                        selectedMainDish = component
+                                        expandedMainDish = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextField(
+                        value = mainDishAmount,
+                        onValueChange = { mainDishAmount = it },
+                        label = { Text("Main Dish Amount (grams)") },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                item {
+                    // Side Dish Component
+                    ExposedDropdownMenuBox(
+                        expanded = expandedSideDish,
+                        onExpandedChange = { expandedSideDish = !expandedSideDish }
+                    ) {
+                        TextField(
+                            value = selectedSideDish?.name ?: "Select Side Dish",
+                            onValueChange = { },
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSideDish) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedSideDish,
+                            onDismissRequest = { expandedSideDish = false }
+                        ) {
+                            sideDishComponents.forEach { component ->
+                                DropdownMenuItem(
+                                    text = { Text(component.name) },
+                                    onClick = {
+                                        selectedSideDish = component
+                                        expandedSideDish = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextField(
+                        value = sideDishAmount,
+                        onValueChange = { sideDishAmount = it },
+                        label = { Text("Side Dish Amount (grams)") },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                if (selectedMealType == "Lunch") {
+                    item {
+                        // Soup Component
+                        ExposedDropdownMenuBox(
+                            expanded = expandedSoup,
+                            onExpandedChange = { expandedSoup = !expandedSoup }
+                        ) {
+                            TextField(
+                                value = selectedSoup?.name ?: "Select Soup",
+                                onValueChange = { },
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSoup) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedSoup,
+                                onDismissRequest = { expandedSoup = false }
+                            ) {
+                                soupComponents.forEach { component ->
+                                    DropdownMenuItem(
+                                        text = { Text(component.name) },
+                                        onClick = {
+                                            selectedSoup = component
+                                            expandedSoup = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        TextField(
+                            value = soupAmount,
+                            onValueChange = { soupAmount = it },
+                            label = { Text("Soup Amount (grams)") },
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+
+                item {
+                    // Dessert Component
+                    ExposedDropdownMenuBox(
+                        expanded = expandedDesert,
+                        onExpandedChange = { expandedDesert = !expandedDesert }
+                    ) {
+                        TextField(
+                            value = selectedDesert?.name ?: "Select Dessert",
+                            onValueChange = { },
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDesert) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedDesert,
+                            onDismissRequest = { expandedDesert = false }
+                        ) {
+                            desertComponents.forEach { component ->
+                                DropdownMenuItem(
+                                    text = { Text(component.name) },
+                                    onClick = {
+                                        selectedDesert = component
+                                        expandedDesert = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextField(
+                        value = desertAmount,
+                        onValueChange = { desertAmount = it },
+                        label = { Text("Dessert Amount (grams)") },
                         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -355,124 +400,83 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
             }
 
             item {
-                // Dessert Component
-                ExposedDropdownMenuBox(
-                    expanded = expandedDesert,
-                    onExpandedChange = { expandedDesert = !expandedDesert }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    contentAlignment = Alignment.CenterEnd
                 ) {
-                    TextField(
-                        value = selectedDesert?.name ?: "Select Dessert",
-                        onValueChange = { },
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDesert) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedDesert,
-                        onDismissRequest = { expandedDesert = false }
+                    Button(
+                        onClick = {
+                            val amount = when (selectedMealType) {
+                                "Breakfast" -> breakfastAmount.toIntOrNull()
+                                "Lunch" -> mainDishAmount.toIntOrNull()
+                                "Dinner" -> mainDishAmount.toIntOrNull()
+                                else -> null
+                            }
+                            val component = when (selectedMealType) {
+                                "Breakfast" -> selectedBreakfast
+                                "Lunch" -> selectedMainDish
+                                "Dinner" -> selectedMainDish
+                                else -> null
+                            }
+                            if (component != null && amount != null && amount > 0) {
+                                addedMeals = addedMeals + Pair(component, amount)
+                                breakfastAmount = ""
+                                mainDishAmount = ""
+                                sideDishAmount = ""
+                                soupAmount = ""
+                                desertAmount = ""
+                            } else {
+                                Log.d("AddMeal", "Invalid input for adding meal")
+                            }
+                        },
                     ) {
-                        desertComponents.forEach { component ->
-                            DropdownMenuItem(
-                                text = { Text(component.name) },
-                                onClick = {
-                                    selectedDesert = component
-                                    expandedDesert = false
-                                }
-                            )
-                        }
+                        Text("Add Meal")
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
 
-                TextField(
-                    value = desertAmount,
-                    onValueChange = { desertAmount = it },
-                    label = { Text("Dessert Amount (grams)") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
+                Spacer(modifier = Modifier.height(16.dp))
 
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Button(
-                    onClick = {
-                        val components = listOf(
-                            selectedMainDish to mainDishAmount,
-                            selectedSideDish to sideDishAmount,
-                            selectedSoup to soupAmount,
-                            selectedDesert to desertAmount,
-                            selectedBreakfast to breakfastAmount
-                        )
-
-                        components.forEach { (component, amount) ->
-                            val grams = amount.toIntOrNull()
-                            if (component != null && grams != null && grams > 0) {
-                                addedMeals = addedMeals + Pair(component, grams)
-                            }
-                        }
-
-                        mainDishAmount = ""
-                        sideDishAmount = ""
-                        soupAmount = ""
-                        desertAmount = ""
-                        breakfastAmount = ""
-                    },
-                ) {
-                    Text("Add Meal")
+                Text("Added Meals:", style = MaterialTheme.typography.titleMedium)
+                addedMeals.forEach { (meal, amount) ->
+                    Text("${meal.name}: $amount grams")
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Added Meals:", style = MaterialTheme.typography.titleMedium)
-            addedMeals.forEach { (meal, amount) ->
-                Text("${meal.name}: $amount grams")
-            }
+                Text("Total Calories: $totalCalories", style = MaterialTheme.typography.titleMedium)
+                Text("Total Protein: $totalProtein g", style = MaterialTheme.typography.titleMedium)
+                Text("Total Carbs: $totalCarbs g", style = MaterialTheme.typography.titleMedium)
+                Text("Total Fats: $totalFats g", style = MaterialTheme.typography.titleMedium)
+                Text("Total Sodium: $totalSodium mg", style = MaterialTheme.typography.titleMedium)
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Total Calories: $totalCalories", style = MaterialTheme.typography.titleMedium)
-            Text("Total Protein: $totalProtein g", style = MaterialTheme.typography.titleMedium)
-            Text("Total Carbs: $totalCarbs g", style = MaterialTheme.typography.titleMedium)
-            Text("Total Fats: $totalFats g", style = MaterialTheme.typography.titleMedium)
-            Text("Total Sodium: $totalSodium mg", style = MaterialTheme.typography.titleMedium)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Button(
-                    onClick = {
-                        if (planName.isNotEmpty() && addedMeals.isNotEmpty()) {
-                            val mealPlan = CustomMealPlan(
-                                id = "",
-                                userId = userId,
-                                name = planName,
-                                meals = addedMeals.map { it.first }
-                            )
-                            viewModel.saveCustomMealPlan(mealPlan)
-                            navController.navigate("saved_meal_plans/$userId")
-                        } else {
-                            Log.d("Save Plan", "Invalid input for saving plan")
-                        }
-                    },
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    contentAlignment = Alignment.CenterEnd
                 ) {
-                    Text("Save Plan")
+                    Button(
+                        onClick = {
+                            if (planName.isNotEmpty() && addedMeals.isNotEmpty()) {
+                                val mealPlan = CustomMealPlan(
+                                    id = "",
+                                    userId = userId,
+                                    name = planName,
+                                    meals = addedMeals.map { it.first }
+                                )
+                                viewModel.saveCustomMealPlan(mealPlan)
+                                navController.navigate("saved_meal_plans/$userId")
+                            } else {
+                                Log.d("Save Plan", "Invalid input for saving plan")
+                            }
+                        },
+                    ) {
+                        Text("Save Plan")
+                    }
                 }
             }
         }
