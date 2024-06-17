@@ -20,7 +20,9 @@ data class MealPlan(
     val protein: Int = 0,
     val carbs: Int = 0,
     val fats: Int = 0,
-    val sodium: Int = 0
+    val sodium: Int = 0,
+    val fiber: Int = 0,  // Added fiber parameter
+    var grams: Int = 100  // Added grams parameter
 )
 
 data class MealComponent(
@@ -30,8 +32,11 @@ data class MealComponent(
     val protein: Int = 0,
     val carbs: Int = 0,
     val fats: Int = 0,
-    val sodium: Int = 0
+    val sodium: Int = 0,
+    val fiber: Int = 0,  // Added fiber parameter
+    var grams: Int = 100  // Added grams parameter
 )
+
 
 data class CustomMealPlan(
     var id: String = "",
@@ -40,7 +45,9 @@ data class CustomMealPlan(
     val meals: List<MealComponent> = listOf()
 )
 
+
 class MealPlansViewModel(application: Application) : AndroidViewModel(application) {
+
     private val _mealPlans = MutableStateFlow<List<MealPlan>>(emptyList())
     val mealPlans: StateFlow<List<MealPlan>> = _mealPlans
 
@@ -77,6 +84,12 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
     private val _breakfastComponents = MutableStateFlow<List<MealComponent>>(emptyList())
     val breakfastComponents: StateFlow<List<MealComponent>> = _breakfastComponents
 
+    private val _generatedMealPlansWithFactors = MutableStateFlow<List<Pair<MealPlan, Double>>>(emptyList())
+    val generatedMealPlansWithFactors: StateFlow<List<Pair<MealPlan, Double>>> = _generatedMealPlansWithFactors
+
+    private val _savedMealPlansWithFactors = MutableStateFlow<List<Pair<MealPlan, Double>>>(emptyList())
+    val savedMealPlansWithFactors: StateFlow<List<Pair<MealPlan, Double>>> = _savedMealPlansWithFactors
+
     fun fetchMealComponentsForType(mealType: String, medicalCondition: String, subCategory: String) {
         viewModelScope.launch {
             val formattedMedicalCondition = when (medicalCondition) {
@@ -111,7 +124,7 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
         gender: String,
         activityLevel: String
     ): Int {
-        val bmr = if (gender == "male") {
+        val bmr = if (gender.lowercase() == "male") {
             88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
         } else {
             447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
@@ -131,6 +144,7 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+
     fun generateMealPlans(
         age: Int,
         weight: Float,
@@ -146,7 +160,7 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
 
             Log.d("MealPlansViewModel", "Caloric Needs: $caloricNeeds")
 
-            val mealPlans = mutableListOf<MealPlan>()
+            val mealPlansWithFactors = mutableListOf<Pair<MealPlan, Double>>()
             val categories = listOf("breakfast", "lunch", "diner")
             val formattedMedicalCondition = when (medicalConditions.lowercase(Locale.getDefault()).trim()) {
                 "diabetes" -> "diabetes"
@@ -169,16 +183,16 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
                     for (doc in documents) {
                         val originalMealPlan = doc.toObject(MealPlan::class.java).apply { id = doc.id }
                         Log.d("MealPlansViewModel", "Original Meal Plan: $originalMealPlan")
-                        val adjustedMealPlan = adjustMealPlanForCalories(originalMealPlan, caloricNeeds, category)
-                        Log.d("MealPlansViewModel", "Adjusted Meal Plan: $adjustedMealPlan")
-                        mealPlans.add(adjustedMealPlan)
+                        val (adjustedMealPlan, factor) = adjustMealPlanForCalories(originalMealPlan, caloricNeeds, category)
+                        Log.d("MealPlansViewModel", "Adjusted Meal Plan: $adjustedMealPlan with Factor: $factor")
+                        mealPlansWithFactors.add(Pair(adjustedMealPlan, factor))
                     }
                 }
             }
 
-            _generatedMealPlans.value = mealPlans
+            _generatedMealPlansWithFactors.value = mealPlansWithFactors
 
-            saveMealPlansToFirestore(userId, mealPlans)
+            saveMealPlansToFirestore(userId, mealPlansWithFactors.map { it.first })
         }
     }
 
@@ -212,16 +226,46 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
                 .collection("mealPlans")
                 .get()
                 .addOnSuccessListener { documents ->
-                    _savedMealPlans.value = documents.map { doc ->
+                    val mealPlansWithFactors = documents.map { doc ->
                         val mealPlan = doc.toObject(MealPlan::class.java)
                         mealPlan.id = doc.id // Ensure the ID is set
-                        mealPlan
+                        val factor = adjustMealPlanForCalories(mealPlan, dailyCaloricNeeds.value, mealPlan.type).second
+                        Pair(mealPlan, factor)
                     }
+                    _savedMealPlansWithFactors.value = mealPlansWithFactors
                 }.addOnFailureListener { exception ->
                     Log.e("Firestore", "Error fetching saved meal plans", exception)
                 }
         }
     }
+
+    fun setDailyCaloricNeeds(age: Int, weight: Float, height: Int, gender: String, activityLevel: String) {
+        _dailyCaloricNeeds.value = calculateCaloricNeeds(age, weight, height, gender, activityLevel)
+    }
+
+    fun getSavedMealPlansWithFactors(userId: String) {
+        viewModelScope.launch {
+            firestore.collection("userMealPlans")
+                .document(userId)
+                .collection("mealPlans")
+                .get()
+                .addOnSuccessListener { documents ->
+                    val mealPlansWithFactors = documents.map { doc ->
+                        val mealPlan = doc.toObject(MealPlan::class.java)
+                        mealPlan.id = doc.id // Ensure the ID is set
+                        Log.d("MealPlansViewModel", "Fetched Meal Plan: $mealPlan")
+                        val factor = adjustMealPlanForCalories(mealPlan, dailyCaloricNeeds.value, mealPlan.type).second
+                        Log.d("MealPlansViewModel", "Factor for ${mealPlan.type}: $factor")
+                        Pair(mealPlan, factor)
+                    }
+                    _savedMealPlansWithFactors.value = mealPlansWithFactors
+                }.addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error fetching saved meal plans", exception)
+                }
+        }
+    }
+
+
 
     fun getCustomSavedMealPlans(userId: String) {
         viewModelScope.launch {
@@ -241,27 +285,39 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    private fun adjustMealPlanForCalories(mealPlan: MealPlan, caloricNeeds: Int, category: String): MealPlan {
-        val percentage = when (category) {
+    fun adjustMealPlanForCalories(mealPlan: MealPlan, caloricNeeds: Int, category: String): Pair<MealPlan, Double> {
+        val percentage = when (category.lowercase(Locale.getDefault())) {
             "breakfast" -> 0.25
-            "lunch" -> 0.40
-            "diner" -> 0.35
+            "lunch" -> 0.45
+            "diner", "dinner" -> 0.30 // Ensure "diner" is used correctly
             else -> 0.0
         }
 
         val targetCalories = caloricNeeds * percentage
-        val factor = targetCalories / mealPlan.calories
+        val factor = if (mealPlan.calories != 0) targetCalories / mealPlan.calories else 0.0
 
         Log.d("MealPlansViewModel", "Adjusting Meal Plan for $category: Target Calories = $targetCalories, Factor = $factor")
+        Log.d("MealPlansViewModel", "Meal Plan Before Adjustment: $mealPlan")
 
-        return mealPlan.copy(
-            calories = targetCalories.toInt(),
+        val adjustedMealPlan = mealPlan.copy(
+            calories = (mealPlan.calories * factor).toInt(),
             protein = (mealPlan.protein * factor).toInt(),
             carbs = (mealPlan.carbs * factor).toInt(),
             fats = (mealPlan.fats * factor).toInt(),
-            sodium = (mealPlan.sodium * factor).toInt()
+            sodium = (mealPlan.sodium * factor).toInt(),
+            fiber = (mealPlan.fiber * factor).toInt(),
+            grams = (mealPlan.grams * factor).toInt()
         )
+
+        Log.d("MealPlansViewModel", "Adjusted Meal Plan: $adjustedMealPlan")
+
+        return Pair(adjustedMealPlan, factor)
     }
+
+
+
+
+
 
     fun deleteMealPlan(id: String, userId: String) {
         viewModelScope.launch {
@@ -309,4 +365,5 @@ class MealPlansViewModel(application: Application) : AndroidViewModel(applicatio
             }
         }
     }
+
 }

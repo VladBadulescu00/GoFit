@@ -94,10 +94,13 @@ fun Navigation(navController: NavHostController) {
                 backStackEntry.arguments?.getString("userId") ?: ""
             )
         }
-        composable("saved_plans_selection/{userId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: ""
-            SavedPlansSelectionScreen(navController, userId)
+        composable("saved_plans_selection/{userId}",
+            arguments = listOf(navArgument("userId") { defaultValue = "" })
+        ) { backStackEntry ->
+            SavedPlansSelectionScreen(
+                navController,
+                backStackEntry.arguments?.getString("userId") ?: ""
+            )
         }
-
     }
 }

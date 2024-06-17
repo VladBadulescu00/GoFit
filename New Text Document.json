@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Zucchini Egg Bakes",
+    "meal": "Eggs baked with shredded zucchini.",
+    "calories": 100.7,
+    "carbs": 3.7,
+    "fats": 5.5,
+    "fiber": 0.9,
+    "protein": 8.8,
+    "sodium": 198.1
+  },
+  {
+    "name": "Cauliflower Soup",
+    "meal": "Soup made with cauliflower, onions, garlic, and broth.",
+    "calories": 24.2,
+    "carbs": 3.3,
+    "fats": 0.9,
+    "fiber": 0.9,
+    "protein": 0.7,
+    "sodium": 105.8
+  },
+  {
+    "name": "Lemon Chicken and Roasted Vegetables",
+    "meal": "Chicken with lemon, garlic, and rosemary, served with roasted potatoes and Brussels sprouts.",
+    "calories": 128.2,
+    "carbs": 11.2,
+    "fats": 5.9,
+    "fiber": 1.5,
+    "protein": 8.4,
+    "sodium": 91.5
+  }
+]

@@ -24,7 +24,7 @@ fun GeneratedPlansScreen(
     fitnessPlansViewModel: FitnessPlansViewModel,
     userId: String
 ) {
-    val generatedMealPlans by mealPlansViewModel.generatedMealPlans.collectAsState()
+    val generatedMealPlansWithFactors by mealPlansViewModel.generatedMealPlansWithFactors.collectAsState()
     val generatedFitnessPlans by fitnessPlansViewModel.generatedFitnessPlans.collectAsState()
     val dailyCaloricNeeds by mealPlansViewModel.dailyCaloricNeeds.collectAsState()
 
@@ -33,7 +33,7 @@ fun GeneratedPlansScreen(
         fitnessPlansViewModel.fetchFitnessPlans(userId)
     }
 
-    Log.d("GeneratedPlansScreen", "Generated Meal Plans: $generatedMealPlans")
+    Log.d("GeneratedPlansScreen", "Generated Meal Plans: $generatedMealPlansWithFactors")
     Log.d("GeneratedPlansScreen", "Generated Fitness Plans: $generatedFitnessPlans")
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -46,12 +46,14 @@ fun GeneratedPlansScreen(
             verticalArrangement = Arrangement.Top
         ) {
             item {
-                Text("Planuri de masă", style = MaterialTheme.typography.titleLarge)
-                Text("Necesarul caloric zilnic: $dailyCaloricNeeds calorii", style = MaterialTheme.typography.bodyLarge)
+                Text("Meal Plans", style = MaterialTheme.typography.titleLarge)
+                Text("Daily Caloric Needs: $dailyCaloricNeeds calories", style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            items(generatedMealPlans) { mealPlan ->
+            items(generatedMealPlansWithFactors) { (mealPlan, factor) ->
+                val gramsPerMeal = 100 * factor
+
                 Log.d("GeneratedPlansScreen", "Displaying Meal Plan: $mealPlan")
                 Card(
                     modifier = Modifier
@@ -60,13 +62,15 @@ fun GeneratedPlansScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "Type: ${mealPlan.type}", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "Meal: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "Name: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge) // Add this line to display the meal name
+                        //Text(text = "Meal: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = "Name: ${mealPlan.meal}", style = MaterialTheme.typography.bodyLarge)
                         Text(text = "Calories: ${mealPlan.calories}", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Protein: ${mealPlan.protein}g", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Carbs: ${mealPlan.carbs}g", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Fats: ${mealPlan.fats}g", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "Sodium: ${mealPlan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Fiber: ${mealPlan.fiber}g", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Grams: ${gramsPerMeal.toInt()} g", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }

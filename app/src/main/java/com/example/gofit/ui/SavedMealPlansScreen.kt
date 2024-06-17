@@ -13,10 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.gofit.viewmodel.CustomMealPlan
 import com.example.gofit.viewmodel.MealPlan
 import com.example.gofit.viewmodel.MealPlansViewModel
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,11 +28,11 @@ fun SavedMealPlansScreen(
     viewModel: MealPlansViewModel,
     userId: String
 ) {
-    val savedMealPlans by viewModel.savedMealPlans.collectAsState()
+    val savedMealPlansWithFactors by viewModel.savedMealPlansWithFactors.collectAsState()
     val customMealPlans by viewModel.customMealPlans.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.getSavedMealPlans(userId)
+        viewModel.getSavedMealPlansWithFactors(userId)
         viewModel.getCustomSavedMealPlans(userId)
     }
 
@@ -43,15 +46,15 @@ fun SavedMealPlansScreen(
             Text("Saved Meal Plans", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(savedMealPlans) { plan ->
-                    MealPlanCard(plan = plan, onDelete = {
+            LazyColumn {
+                items(savedMealPlansWithFactors) { (plan, factor) ->
+                    MealPlanCard(plan = plan, factor = factor, onDelete = {
                         viewModel.deleteMealPlan(plan.id, userId)
                     })
                 }
 
                 items(customMealPlans) { customPlan ->
-                    CustomMealPlanCard(customPlan = customPlan, onDelete = {
+                    CustomMealPlanCard(customPlan = customPlan, viewModel = viewModel, onDelete = {
                         viewModel.deleteCustomMealPlan(customPlan.id, userId)
                     })
                 }
@@ -68,9 +71,10 @@ fun SavedMealPlansScreen(
         }
     }
 }
-
 @Composable
-fun MealPlanCard(plan: MealPlan, onDelete: () -> Unit) {
+fun MealPlanCard(plan: MealPlan, factor: Double, onDelete: () -> Unit) {
+    val gramsPerMeal = if (factor > 0) (plan.grams * factor).toInt() else 0
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -84,18 +88,18 @@ fun MealPlanCard(plan: MealPlan, onDelete: () -> Unit) {
             Text("Carbs: ${plan.carbs}g", style = MaterialTheme.typography.bodyMedium)
             Text("Fats: ${plan.fats}g", style = MaterialTheme.typography.bodyMedium)
             Text("Sodium: ${plan.sodium}mg", style = MaterialTheme.typography.bodyMedium)
-            Button(
-                onClick = onDelete,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
+            Text("Fiber: ${plan.fiber}g", style = MaterialTheme.typography.bodyMedium)
+            Text("Grams: ${plan.grams} g", style = MaterialTheme.typography.bodyMedium)
+            Button(onClick = onDelete) {
                 Text("Delete")
             }
         }
     }
 }
 
+
 @Composable
-fun CustomMealPlanCard(customPlan: CustomMealPlan, onDelete: () -> Unit) {
+fun CustomMealPlanCard(customPlan: CustomMealPlan, viewModel: MealPlansViewModel, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -104,12 +108,23 @@ fun CustomMealPlanCard(customPlan: CustomMealPlan, onDelete: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Custom Plan: ${customPlan.name}", style = MaterialTheme.typography.titleMedium)
             customPlan.meals.forEach { meal ->
+                val targetCalories = when (meal.name.lowercase()) {
+                    "breakfast" -> viewModel.dailyCaloricNeeds.value * 0.25
+                    "lunch" -> viewModel.dailyCaloricNeeds.value * 0.40
+                    "diner" -> viewModel.dailyCaloricNeeds.value * 0.35
+                    else -> 0.0
+                }
+
+                val factor = if (meal.calories > 0) targetCalories / meal.calories else 0.0
+                val gramsPerMeal = if (factor > 0) (100 * factor).toInt() else 0
+
                 Text("Meal: ${meal.name}", style = MaterialTheme.typography.bodyMedium)
                 Text("Calories: ${meal.calories}", style = MaterialTheme.typography.bodySmall)
                 Text("Protein: ${meal.protein}g", style = MaterialTheme.typography.bodySmall)
                 Text("Carbs: ${meal.carbs}g", style = MaterialTheme.typography.bodySmall)
                 Text("Fats: ${meal.fats}g", style = MaterialTheme.typography.bodySmall)
                 Text("Sodium: ${meal.sodium}mg", style = MaterialTheme.typography.bodySmall)
+                Text("Grams per Meal: ${gramsPerMeal} g", style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.height(8.dp))
             }
             Button(

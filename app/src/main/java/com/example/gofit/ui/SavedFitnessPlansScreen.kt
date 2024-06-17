@@ -91,6 +91,7 @@ fun CustomFitnessPlanCard(customPlan: CustomFitnessPlan, onDelete: () -> Unit) {
             Text("Custom Plan: ${customPlan.name}", style = MaterialTheme.typography.titleMedium)
             customPlan.exercises.forEach { exercise ->
                 Text("${exercise.name}: ${exercise.reps} reps, ${exercise.sets} sets", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "Duration: ${exercise.duration} minutes", style = MaterialTheme.typography.bodyMedium)
                 Text("Calories Burned: ${exercise.caloriesBurned}", style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.height(8.dp))
             }

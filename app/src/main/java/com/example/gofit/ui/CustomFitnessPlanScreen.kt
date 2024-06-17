@@ -621,7 +621,7 @@ fun CustomFitnessPlanScreen(navController: NavController, viewModel: FitnessPlan
             ) {
                 Button(
                     onClick = {
-                        val exercise = when (selectedFitnessType) {
+                        val exercises = when (selectedFitnessType) {
                             "Push" -> listOfNotNull(
                                 selectedChest?.let { CustomFitnessPlan.FitnessExercise(it.name, chestReps.toIntOrNull() ?: 0, chestSets.toIntOrNull() ?: 0) },
                                 selectedShoulders?.let { CustomFitnessPlan.FitnessExercise(it.name, shouldersReps.toIntOrNull() ?: 0, shouldersSets.toIntOrNull() ?: 0) },
@@ -643,8 +643,8 @@ fun CustomFitnessPlanScreen(navController: NavController, viewModel: FitnessPlan
                             else -> emptyList()
                         }
 
-                        if (exercise.isNotEmpty()) {
-                            addedExercises = addedExercises + exercise
+                        if (exercises.isNotEmpty()) {
+                            addedExercises = addedExercises + exercises
                             // Clear only the exercise-specific fields
                             chestReps = ""
                             chestSets = ""
@@ -683,7 +683,7 @@ fun CustomFitnessPlanScreen(navController: NavController, viewModel: FitnessPlan
 
             Text("Added Exercises:", style = MaterialTheme.typography.titleMedium)
             addedExercises.forEach { exercise ->
-                if (selectedFitnessType == "Cardio") {
+                if (exercise.duration > 0) {
                     Text("${exercise.name}: ${exercise.duration} minutes, ${exercise.caloriesBurned} calories burned")
                 } else {
                     Text("${exercise.name}: ${exercise.reps} reps, ${exercise.sets} sets")

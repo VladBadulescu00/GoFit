@@ -46,6 +46,7 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
     val totalCarbs = addedMeals.sumOf { it.first.carbs * it.second / 100 }
     val totalFats = addedMeals.sumOf { it.first.fats * it.second / 100 }
     val totalSodium = addedMeals.sumOf { it.first.sodium * it.second / 100 }
+    val totalFiber = addedMeals.sumOf { it.first.fiber * it.second / 100 }  // Added total fiber calculation
 
     val mealTypes = listOf("Breakfast", "Lunch", "Diner")
     val medicalConditions = listOf("None", "Diabetes", "Heart Disease", "Hypertension")
@@ -408,20 +409,40 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
                 ) {
                     Button(
                         onClick = {
-                            val amount = when (selectedMealType) {
-                                "Breakfast" -> breakfastAmount.toIntOrNull()
-                                "Lunch" -> mainDishAmount.toIntOrNull()
-                                "Dinner" -> mainDishAmount.toIntOrNull()
-                                else -> null
+                            val newMeals = mutableListOf<Pair<MealComponent, Int>>()
+
+                            // Add breakfast
+                            val breakfastAmountValue = breakfastAmount.toIntOrNull()
+                            if (selectedBreakfast != null && breakfastAmountValue != null && breakfastAmountValue > 0) {
+                                newMeals.add(Pair(selectedBreakfast!!, breakfastAmountValue))
                             }
-                            val component = when (selectedMealType) {
-                                "Breakfast" -> selectedBreakfast
-                                "Lunch" -> selectedMainDish
-                                "Dinner" -> selectedMainDish
-                                else -> null
+
+                            // Add main dish
+                            val mainDishAmountValue = mainDishAmount.toIntOrNull()
+                            if (selectedMainDish != null && mainDishAmountValue != null && mainDishAmountValue > 0) {
+                                newMeals.add(Pair(selectedMainDish!!, mainDishAmountValue))
                             }
-                            if (component != null && amount != null && amount > 0) {
-                                addedMeals = addedMeals + Pair(component, amount)
+
+                            // Add side dish
+                            val sideDishAmountValue = sideDishAmount.toIntOrNull()
+                            if (selectedSideDish != null && sideDishAmountValue != null && sideDishAmountValue > 0) {
+                                newMeals.add(Pair(selectedSideDish!!, sideDishAmountValue))
+                            }
+
+                            // Add soup
+                            val soupAmountValue = soupAmount.toIntOrNull()
+                            if (selectedSoup != null && soupAmountValue != null && soupAmountValue > 0) {
+                                newMeals.add(Pair(selectedSoup!!, soupAmountValue))
+                            }
+
+                            // Add desert
+                            val desertAmountValue = desertAmount.toIntOrNull()
+                            if (selectedDesert != null && desertAmountValue != null && desertAmountValue > 0) {
+                                newMeals.add(Pair(selectedDesert!!, desertAmountValue))
+                            }
+
+                            if (newMeals.isNotEmpty()) {
+                                addedMeals = addedMeals + newMeals
                                 breakfastAmount = ""
                                 mainDishAmount = ""
                                 sideDishAmount = ""
@@ -450,6 +471,7 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
                 Text("Total Carbs: $totalCarbs g", style = MaterialTheme.typography.titleMedium)
                 Text("Total Fats: $totalFats g", style = MaterialTheme.typography.titleMedium)
                 Text("Total Sodium: $totalSodium mg", style = MaterialTheme.typography.titleMedium)
+                Text("Total Fiber: $totalFiber g", style = MaterialTheme.typography.titleMedium)  // Added total fiber display
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -494,3 +516,4 @@ fun CustomMealPlanScreen(navController: NavController, viewModel: MealPlansViewM
         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
     }
 }
+
